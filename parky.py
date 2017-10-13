@@ -34,3 +34,6 @@ class DbCursor:
     def execute_and_fetchone(self, qry, *args):
         self.execute(qry, *args)
         return self._cur.fetchone()
+
+
+
