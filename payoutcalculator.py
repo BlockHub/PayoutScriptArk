@@ -8,7 +8,7 @@ import time
 import pickle
 import datetime
 import os
-
+import copy
 
 def get_transactionlist(cursor):
     command = """ SELECT transactions."id", transactions."amount",
@@ -127,12 +127,10 @@ def parse_tx(all_tx, voter_dict, named_blocks):
     block_nr = 0
     for tx in all_tx:
         if tx.timestamp >= named_blocks[block_nr].timestamp:
-            balance_dict.update({named_blocks[block_nr].timestamp: voter_dict})
+            res = copy.deepcopy(voter_dict)
+            balance_dict.update({named_blocks[block_nr].timestamp: res})
             block_nr += 1
-
         voter_dict = parse(tx, voter_dict)
-
-    # print(i, balance_dict[i])
     return balance_dict
 
 
@@ -172,41 +170,37 @@ def gen_payouts(number_of_blocks, final_balance_dict, blocks):
     # returns a dict with address as key, and total amount of ark to be transacted for X blocks
     delegateshare = 0
     blocks.reverse()
-    start_key = blocks[number_of_blocks - 1].timestamp
     payout_dict = {}
+    last_block = max(final_balance_dict.keys())
     for block in final_balance_dict:
-        if block > start_key:
-            for address in final_balance_dict[block]:
+        for address in final_balance_dict[block]:
 
-                if config.SHARE['TIMESTAMP_BRACKETS']:
-                    for i in config.SHARE['TIMESTAMP_BRACKETS']:
-                        if final_balance_dict[block][address]['vote_timestamp'] <= i:
-                            share = config.SHARE['TIMESTAMP_BRACKETS'][i]
-                            if address in config.EXCEPTIONS:
-                                share = config.EXCEPTIONS[address]
-                            tax = 1-share
-
-                if final_balance_dict[block][address]['last_payout'] < block:
-                    if address not in payout_dict:
-                        payout_dict.update({address: {'share':          final_balance_dict[block][address]['share'] * 2 * utils.ARK * share,
-                                                      'last_payout':    final_balance_dict[block][address]['last_payout'],
-                                                      'vote_timestamp': final_balance_dict[block][address]['vote_timestamp'],
-                                                      'status': final_balance_dict[block][address]['status']}}
-                                                          )
-                        delegateshare += final_balance_dict[block][address]['share'] * 2 * utils.ARK * tax
+            if config.SHARE['TIMESTAMP_BRACKETS']:
+                for i in config.SHARE['TIMESTAMP_BRACKETS']:
+                    if final_balance_dict[block][address]['vote_timestamp'] <= i:
+                        share = config.SHARE['TIMESTAMP_BRACKETS'][i]
                     else:
-                        payout_dict[address]['share'] += (final_balance_dict[block][address]['share'] * 2 * utils.ARK * share)
-                        if payout_dict[address]['last_payout'] < final_balance_dict[block][address]['last_payout']:
-                            payout_dict[address]['last_payout'] = final_balance_dict[block][address]['last_payout']
+                        share = 0.95
+                        if address in config.EXCEPTIONS:
+                            share = config.EXCEPTIONS[address]
+                    tax = 1-share
 
-                        if payout_dict[address]['vote_timestamp'] < final_balance_dict[block][address]['vote_timestamp']:
-                            payout_dict[address]['vote_timestamp'] = final_balance_dict[block][address]['vote_timestamp']
+            if final_balance_dict[last_block][address]['last_payout'] < block:
+                if address not in payout_dict:
+                    payout_dict.update({address: {'share':          final_balance_dict[block][address]['share'] * 2 * utils.ARK * share,
+                                                  'last_payout':    final_balance_dict[last_block][address]['last_payout'],
+                                                  'vote_timestamp': final_balance_dict[last_block][address]['vote_timestamp'],
+                                                  'status': final_balance_dict[last_block][address]['status']}}
+                                                      )
+                    delegateshare += final_balance_dict[block][address]['share'] * 2 * utils.ARK * tax
+                else:
+                    payout_dict[address]['share'] += (final_balance_dict[block][address]['share'] * 2 * utils.ARK * share)
 
-                        delegateshare += final_balance_dict[block][address]['share'] * 2 * utils.ARK * tax
+                    delegateshare += final_balance_dict[block][address]['share'] * 2 * utils.ARK * tax
     return payout_dict, delegateshare
 
 
-def test_print(payouts, set_api=None):
+def test_print(payouts, delegateshare, set_api=None):
     if set_api:
         api.use('ark')
 
@@ -232,7 +226,12 @@ def test_print(payouts, set_api=None):
         info.append([i, share/utils.ARK, ROI , balance/utils.ARK, last_payout, status])
         table.append(info)
 
+    total = 0
+    for i in payouts:
+        total += payouts[i]['share']
+
     print(tabulate(table, ['ADDRESS', 'SHARE', 'ROI', 'BALANCE', 'STATUS']))
+    print('total to be paid: ', total, 'delegateshare before txfees: ', delegateshare)
 
 
 if __name__ == '__main__':
@@ -266,7 +265,7 @@ if __name__ == '__main__':
     balance_history = stretch(updated_balance_dict, named_blocks)
 
     payouts_and_delegateshare = gen_payouts(number_of_blocks, balance_history, named_blocks)
-    test_print(payouts_and_delegateshare[0], set_api=True)
+    test_print(payouts_and_delegateshare[0], payouts_and_delegateshare[1], set_api=True)
     save_file = 'payouts_{}'.format(datetime.date.today())
 
     try:
