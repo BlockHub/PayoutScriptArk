@@ -11,13 +11,13 @@ CONNECTION = {
 CALCULATIONS = {
     # amount of blocks to calculate backwards to. Should be determined by the voter
     # waiting for a payout the longest.
-    'blocks': 5000
+    'blocks': 6874
 }
 DELEGATE = {
     'PUBKEY': "0218b77efb312810c9a549e2cc658330fcc07f554d465673e08fa304fa59e67a0a",
     'ADDRESS': "AZse3vk8s3QEX1bqijFb21aSBeoF6vqLYE",
     'PASSPHRASE': None,
-    'REWARDWALLET': 'AJwHyHAArNmzGfmDnsJenF857ATQevg8HY'
+    'REWARDWALLET': 'ASYtfgrzdG4A9p5TFDhg22cE7FnV71AHxM'
     }
 
 SHARE = {
@@ -44,7 +44,7 @@ SHARE = {
     'MAX_BALANCE': None,
     'MIN_BALANCE': None,
     'MIN_PAYOUT_BALANCE_DAILY': 3 * utils.ARK,
-    'MIN_PAYOUT_BALANCE_WEEKLY': 0.2 * utils.ARK,
+    'MIN_PAYOUT_BALANCE_WEEKLY': 0.1 * utils.ARK,
     'MIN_PAYOUT_BALANCE_MONTHLY': 0.1 * utils.ARK,
     'COVER_TX_FEES': True,
     'COVER_VOTING_FEES': False,
@@ -61,7 +61,7 @@ EXCEPTIONS = {'AQ9gNYefdLE83GpfTzc1pPyCZgX6KvV9rm': 0.96,
               'APGjeMNZY99WuzZi18NUb8RowEscLV7F7M': 0.96,
               }
 
-BLACKLIST = []
+BLACKLIST = ['AXzEMF7TC1aH3ax1Luxk6XdyKXDRxnBj4f', ]
 
 SECRET = 'string'
 

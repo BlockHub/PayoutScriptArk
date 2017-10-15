@@ -10,6 +10,7 @@ import datetime
 import os
 import copy
 
+
 def get_transactionlist(cursor):
     command = """ SELECT transactions."id", transactions."amount",
                          transactions."timestamp", transactions."recipientId",
@@ -17,13 +18,13 @@ def get_transactionlist(cursor):
                          transactions."type", transactions."fee"
                   FROM transactions 
                   WHERE transactions."senderId" IN
-                    (select transactions."recipientId"
-                     from transactions, votes WHERE transactions."id" = votes."transactionId"
-                     and votes."votes" = '+{0}')
+                    (SELECT transactions."recipientId"
+                     FROM transactions, votes WHERE transactions."id" = votes."transactionId"
+                     AND votes."votes" = '+{0}')
                   OR transactions."recipientId" IN
-                    (select transactions."recipientId"
-                     from transactions, votes where transactions."id" = votes."transactionId"
-                     and votes."votes" = '+{0}')
+                    (SELECT transactions."recipientId"
+                     FROM transactions, votes WHERE transactions."id" = votes."transactionId"
+                     AND votes."votes" = '+{0}')
                   ORDER BY transactions."timestamp" ASC;""".format(config.DELEGATE['PUBKEY'])
     cursor.execute(command)
     return cursor.fetchall()
@@ -55,8 +56,7 @@ def get_all_voters(cursor):
     command = """SELECT transactions."recipientId", transactions."timestamp"
                  FROM transactions, votes 
                  WHERE transactions."id" = votes."transactionId" 
-                 AND transactions."recipientId" NOT IN ('{0}')
-                 AND votes."votes" = '+{1}';""".format(config.BLACKLIST, config.DELEGATE['PUBKEY'])
+                 AND votes."votes" = '+{0}';""".format(config.DELEGATE['PUBKEY'])
     cursor.execute(command)
     return cursor.fetchall()
 
@@ -140,10 +140,10 @@ def cal_share(balance_dict):
     for voter_dict in balance_dict:
         pool_balance = 0
         for i in balance_dict[voter_dict]:
-            if balance_dict[voter_dict][i]['status']:
+            if balance_dict[voter_dict][i]['status'] and i not in config.BLACKLIST:
                 pool_balance += balance_dict[voter_dict][i]['balance']
         for i in balance_dict[voter_dict]:
-            if balance_dict[voter_dict][i]['status']:
+            if balance_dict[voter_dict][i]['status'] and i not in config.BLACKLIST:
                 balance_dict[voter_dict][i]['share'] = balance_dict[voter_dict][i]['balance'] / pool_balance
     return balance_dict
 
@@ -165,7 +165,7 @@ def stretch(dict, blocks):
     return dict
 
 
-def gen_payouts(number_of_blocks, final_balance_dict, blocks):
+def gen_payouts(final_balance_dict, blocks):
 
     # returns a dict with address as key, and total amount of ark to be transacted for X blocks
     delegateshare = 0
@@ -190,7 +190,7 @@ def gen_payouts(number_of_blocks, final_balance_dict, blocks):
                     payout_dict.update({address: {'share':          final_balance_dict[block][address]['share'] * 2 * utils.ARK * share,
                                                   'last_payout':    final_balance_dict[last_block][address]['last_payout'],
                                                   'vote_timestamp': final_balance_dict[last_block][address]['vote_timestamp'],
-                                                  'status': final_balance_dict[last_block][address]['status']}}
+                                                  'status':         final_balance_dict[last_block][address]['status']}}
                                                       )
                     delegateshare += final_balance_dict[block][address]['share'] * 2 * utils.ARK * tax
                 else:
@@ -264,8 +264,8 @@ if __name__ == '__main__':
     # for the empty blocks.
     balance_history = stretch(updated_balance_dict, named_blocks)
 
-    payouts_and_delegateshare = gen_payouts(number_of_blocks, balance_history, named_blocks)
-    test_print(payouts_and_delegateshare[0], payouts_and_delegateshare[1], set_api=True)
+    payouts_and_delegateshare = gen_payouts(balance_history, named_blocks)
+    test_print(payouts_and_delegateshare[0], payouts_and_delegateshare[1], set_api=None)
     save_file = 'payouts_{}'.format(datetime.date.today())
 
     try:
