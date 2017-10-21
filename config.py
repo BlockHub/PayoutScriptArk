@@ -25,9 +25,15 @@ SHARE = {
     'FLAT_TAX' : None,
     'BLACKLIST': None,
 
-    # TIMESTAMP_BRACKETS do not redistribute the amounts to lower brackets, proceeds go to delegate
-    # If TIMESTAMP_BRACKETS and BALANCE_BRACKETS are both not None, they are both applied: I.E. above
-    # 200k Ark = 80% share, and if voted after 8th of september = 90% share, the total share for this voter
+    # The default share, when TIMESTAMP_BRACKETS (see below) do not apply.
+    'DEFAULT_SHARE': 0.95,
+
+    # TIMESTAMP_BRACKETS do not redistribute the amounts to lower brackets,
+    # proceeds go to delegate
+    # If TIMESTAMP_BRACKETS and BALANCE_BRACKETS are both not None, they are
+    # both applied: I.E. above
+    # 200k Ark = 80% share, and if voted after 8th of september = 90% share,
+    # the total share for this voter
     # is 80% * 90% = 0.64%.
     'TIMESTAMP_BRACKETS':
     {
@@ -35,12 +41,15 @@ SHARE = {
         16247647    : 0.96
     },
 
-    # BALANCE_BRACKETS do not redistribute the amounts to lower brackets, proceeds go to delegate
+    # BALANCE_BRACKETS do not redistribute the amounts to lower brackets,
+    # proceeds go to delegate
     'BALANCE_BRACKETS': None,
 
-    # any balance above max balance or below min balance is not taken in the calculation
-    # (the ark is divided amongst voters and delegate) so if MAX_BALANCE == 200k and a voter has
-    # 300k, it is counted as 200K. If a voter has 1 Ark, and MIN_BALANCE == 2 Ark, it is counted as 0 Ark
+    # any balance above max balance or below min balance is not taken in the
+    # calculation (the ark is divided amongst voters and delegate)
+    # so if MAX_BALANCE == 200k and a voter has
+    # 300k, it is counted as 200K.
+    # If a voter has 1 Ark, and MIN_BALANCE == 2 Ark, it is counted as 0 Ark
     'MAX_BALANCE'                  : None,
     'MIN_BALANCE'                  : None,
     'MIN_PAYOUT_BALANCE_DAILY'     : 3 * utils.ARK,
@@ -51,7 +60,8 @@ SHARE = {
     'MAX_BALANCE_COVER_TX_FEES'    : False,
     'MIN_BALANCE_COVER_VOTING_FEES': False,
 
-    # At the end of the personal message a tag could be included for administrative purposes
+    # At the end of the personal message a tag could be included for
+    # administrative purposes
     # Example: 'Thanks for voting! ::VOTINGFEE::
     'PERSONAL_MESSAGE': None,
 

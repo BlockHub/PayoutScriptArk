@@ -13,28 +13,49 @@ import copy
 import acidfile
 import rotlog as rl
 
+def get_max_timestamp(cursor):
+    # Fetch the max timestamp as it occurs in table blocks, or return
+    # a previously cached value.
+    if not hasattr(get_max_timestamp, 'timestamp'):
+        r = cursor.execute_and_fetchone(
+            'SELECT MAX(timestamp) FROM blocks')
+        if not r or not r[0]:
+            raise utils.PayoutError('failed to get max timestamp from blocks: '
+                                    + e)
+        rl.info('payoutcalculator: will go up to timestamp %d', r[0])        
+        get_max_timestamp.timestamp = r[0]
+    return get_max_timestamp.timestamp 
+
 def get_transactionlist(cursor):
-    command = """ SELECT transactions."id", transactions."amount",
-                         transactions."timestamp", transactions."recipientId",
-                         transactions."senderId", transactions."rawasset",
-                         transactions."type", transactions."fee"
-                  FROM transactions 
-                  WHERE transactions."senderId" IN
-                    (SELECT transactions."recipientId"
-                     FROM transactions, votes WHERE transactions."id" = votes."transactionId"
-                     AND votes."votes" = '+{0}')
-                  OR transactions."recipientId" IN
-                    (SELECT transactions."recipientId"
-                     FROM transactions, votes WHERE transactions."id" = votes."transactionId"
-                     AND votes."votes" = '+{0}')
-                  ORDER BY transactions."timestamp" ASC;""".format(config.DELEGATE['PUBKEY'])
+    command = """
+        SELECT transactions."id", transactions."amount",
+               transactions."timestamp", transactions."recipientId",
+               transactions."senderId", transactions."rawasset",
+               transactions."type", transactions."fee"
+        FROM transactions
+        WHERE transactions."timestamp" <= {0}
+        AND transactions."senderId" IN
+          (SELECT transactions."recipientId"
+           FROM transactions, votes
+           WHERE transactions."id" = votes."transactionId"
+           AND votes."votes" = '+{1}')
+        OR transactions."recipientId" IN
+          (SELECT transactions."recipientId"
+           FROM transactions, votes
+           WHERE transactions."id" = votes."transactionId"
+           AND votes."votes" = '+{1}')
+        ORDER BY transactions."timestamp" ASC;""".format(
+            get_max_timestamp(cursor),
+            config.DELEGATE['PUBKEY'])
+    
     cursor.execute(command)
     return cursor.fetchall()
 
 
 def name_transactionslist(transactions):
-    Transaction = namedtuple('transaction',
-                             'id amount timestamp recipientId senderId rawasset type fee')
+    Transaction = namedtuple(
+        'transaction',
+        'id amount timestamp recipientId senderId rawasset type fee')
     named_transactions = []
     for i in transactions:
         tx_id = Transaction(id=i[0],
@@ -50,15 +71,20 @@ def name_transactionslist(transactions):
         named_transactions.append(tx_id)
 
     if len(transactions) != len(named_transactions):
-        raise utils.NameError('Length of named transactions is not equal to query from DB')
+        raise utils.NameError('Length of named transactions is not equal '
+                              'to query from DB')
     return named_transactions
 
 
 def get_all_voters(cursor):
     command = """SELECT transactions."recipientId", transactions."timestamp"
                  FROM transactions, votes 
-                 WHERE transactions."id" = votes."transactionId" 
-                 AND votes."votes" = '+{0}';""".format(config.DELEGATE['PUBKEY'])
+                 WHERE transactions."timestamp" <= {0}
+                 AND transactions."id" = votes."transactionId" 
+                 AND votes."votes" = '+{1}';""".format(
+                     get_max_timestamp(cursor),
+                     config.DELEGATE['PUBKEY'])
+    
     cursor.execute(command)
     return cursor.fetchall()
 
@@ -79,9 +105,13 @@ def create_voterdict(res):
 
 def get_blocks(cursor):
     command = """SELECT blocks."timestamp", blocks."height", blocks."id"
-                 FROM blocks 
-                 WHERE blocks."generatorPublicKey" = '\\x{}'
-                 ORDER BY blocks."timestamp" ASC""".format(config.DELEGATE['PUBKEY'])
+                 FROM blocks
+                 WHERE blocks."timestamp" <= {0}
+                 AND blocks."generatorPublicKey" = '\\x{1}'
+                 ORDER BY blocks."timestamp" ASC""".format(
+                     get_max_timestamp(cursor),
+                     config.DELEGATE['PUBKEY'])
+    
     cursor.execute(command)
     return cursor.fetchall()
 
@@ -96,11 +126,11 @@ def name_blocks(get_blocks):
                             id=block[2],)
         block_list.append(block_value)
 
-
     if len(get_blocks) == len(block_list):
         return block_list
     else:
-        raise utils.NameError('Length of named blocks is not equal to query from DB')
+        raise utils.NameError('Length of named blocks is not equal to query '
+                              'from DB')
 
 
 def parse(tx, dict):
@@ -111,11 +141,11 @@ def parse(tx, dict):
     if tx.senderId in dict and tx.type == 2 or tx.type == 3:
         dict[tx.senderId]['balance'] -= tx.fee
 
-    if tx.type == 3 and """{{"votes":["-{0}"]}}""".format(config.DELEGATE['PUBKEY']) \
-            in tx.rawasset:
+    minvote  = '{{"votes":["-{0}"]}}'.format(config.DELEGATE['PUBKEY'])
+    plusvote = '{{"votes":["+{0}"]}}'.format(config.DELEGATE['PUBKEY'])
+    if tx.type == 3 and minvote in tx.rawasset:
         dict[tx.recipientId]['status'] = False
-    if tx.type == 3 and """{{"votes":["+{0}"]}}""".format(config.DELEGATE['PUBKEY']) \
-            in tx.rawasset:
+    if tx.type == 3 and plusvote in tx.rawasset:
         dict[tx.recipientId]['status'] = True
         dict[tx.recipientId]['vote_timestamp'] = tx.timestamp
 
@@ -142,16 +172,20 @@ def cal_share(balance_dict):
     for voter_dict in balance_dict:
         pool_balance = 0
         for i in balance_dict[voter_dict]:
-            if balance_dict[voter_dict][i]['status'] and i not in config.BLACKLIST:
+            if (balance_dict[voter_dict][i]['status'] and
+                i not in config.BLACKLIST):
                 pool_balance += balance_dict[voter_dict][i]['balance']
         for i in balance_dict[voter_dict]:
-            if balance_dict[voter_dict][i]['status'] and i not in config.BLACKLIST:
-                balance_dict[voter_dict][i]['share'] = balance_dict[voter_dict][i]['balance'] / pool_balance
+            if (balance_dict[voter_dict][i]['status'] and
+                i not in config.BLACKLIST):
+                balance_dict[voter_dict][i]['share'] = (
+                    balance_dict[voter_dict][i]['balance'] / pool_balance)
     return balance_dict
 
 
 def stretch(dict, blocks):
-    # duplicating block_dicts where there were no voter transactions during a 6.8 minute interval
+    # duplicating block_dicts where there were no voter transactions during
+    # 6.8 minute interval
     # this makes len(payout_dict) = len(blocks)
     temp_dic = {}
     last_block = min(dict.keys())
@@ -169,36 +203,48 @@ def stretch(dict, blocks):
 
 def gen_payouts(final_balance_dict, blocks):
 
-    # returns a dict with address as key, and total amount of ark to be transacted for X blocks
+    # returns a dict with address as key, and total amount of ark to be
+    # transacted for X blocks
     delegateshare = 0
     blocks.reverse()
     payout_dict = {}
     last_block = max(final_balance_dict.keys())
     for block in final_balance_dict:
         for address in final_balance_dict[block]:
-
             if config.SHARE['TIMESTAMP_BRACKETS']:
                 for i in config.SHARE['TIMESTAMP_BRACKETS']:
                     if final_balance_dict[block][address]['vote_timestamp'] <= i:
                         share = config.SHARE['TIMESTAMP_BRACKETS'][i]
                     else:
-                        share = 0.95
+                        share = config.SHARE['DEFAULT_SHARE']
                         if address in config.EXCEPTIONS:
                             share = config.EXCEPTIONS[address]
-                    tax = 1-share
+                    tax = 1 - share
 
             if final_balance_dict[last_block][address]['last_payout'] < block:
                 if address not in payout_dict:
-                    payout_dict.update({address: {'share':          final_balance_dict[block][address]['share'] * 2 * utils.ARK * share,
-                                                  'last_payout':    final_balance_dict[last_block][address]['last_payout'],
-                                                  'vote_timestamp': final_balance_dict[last_block][address]['vote_timestamp'],
-                                                  'status':         final_balance_dict[last_block][address]['status']}}
+                    payout_dict.update({address: {
+                        'share':
+                        (final_balance_dict[block][address]['share'] * 2 *
+                         utils.ARK * share),
+                        'last_payout':
+                        final_balance_dict[last_block][address]['last_payout'],
+                        'vote_timestamp':
+                        final_balance_dict[last_block][address]['vote_timestamp'],
+                        'status':
+                        final_balance_dict[last_block][address]['status']}}
                                                       )
-                    delegateshare += final_balance_dict[block][address]['share'] * 2 * utils.ARK * tax
+                    delegateshare += (
+                        final_balance_dict[block][address]['share'] * 2 *
+                        utils.ARK * tax)
                 else:
-                    payout_dict[address]['share'] += (final_balance_dict[block][address]['share'] * 2 * utils.ARK * share)
-
-                    delegateshare += final_balance_dict[block][address]['share'] * 2 * utils.ARK * tax
+                    payout_dict[address]['share'] += (
+                        final_balance_dict[block][address]['share'] * 2 *
+                        utils.ARK * share)
+                    delegateshare += (
+                        final_balance_dict[block][address]['share'] * 2 *
+                        utils.ARK * tax)
+                    
     return payout_dict, delegateshare
 
 
@@ -225,7 +271,8 @@ def test_print(payouts, delegateshare, set_api=None):
                     pass
         status = payouts[i]['status']
         last_payout = payouts[i]['last_payout']
-        info.append([i, share/utils.ARK, ROI , balance/utils.ARK, last_payout, status])
+        info.append([i, share/utils.ARK, ROI ,
+                     balance/utils.ARK, last_payout, status])
         table.append(info)
 
     total = 0
@@ -233,7 +280,8 @@ def test_print(payouts, delegateshare, set_api=None):
         total += payouts[i]['share']
 
     rl.debug(tabulate(table, ['ADDRESS', 'SHARE', 'ROI', 'BALANCE', 'STATUS']))
-    rl.debug('total to be paid: ', total, 'delegateshare before txfees: ', delegateshare)
+    rl.debug('total to be paid: ', total,
+             'delegateshare before txfees: ', delegateshare)
 
 
 if __name__ == '__main__':
