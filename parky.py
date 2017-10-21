@@ -6,7 +6,8 @@ class DbConnection:
     def __init__(self):
         self._conn = psycopg2.connect(host=config.CONNECTION['HOST'],
                                       database=config.CONNECTION['DATABASE'],
-                                      user=config.CONNECTION['USER'])
+                                      user=config.CONNECTION['USER'],
+                                      password=config.CONNECTION['PASSWORD'])
 
     def connection(self):
         return self._conn
@@ -19,7 +20,7 @@ class DbCursor:
         self._cur = dbconnection.connection().cursor()
 
     def execute(self, qry, *args):
-        self._cur.execute(qry, (*args,))
+        self._cur.execute(qry, *args)
 
     def fetchall(self):
         return self._cur.fetchall()

@@ -1,4 +1,5 @@
 from arky import api, core
+import acidfile
 import datetime
 import config
 import urllib.request
@@ -81,6 +82,12 @@ def get_frequency(use_site=None):
 
 
 if __name__ == '__main__':
+    d = acidfile.ACIDDir(config.PAYOUTDIR)
+    for f in d.glob():
+        with acidfile.ACIDReadFile(f) as inf:
+            data = pickle.load(inf)
+            send_transaction(data, test=True)
+    """
     save_file = 'payouts_{}'.format(datetime.date.today())
 
     with open(save_file, 'rb') as f:
@@ -90,3 +97,4 @@ if __name__ == '__main__':
     payouts, delegateshare = payouts_and_delegateshare
     frq_dict = get_frequency(config.CONNECTION['USE_API'])
     send_transactions(payouts, frq_dict, test=True)
+    """

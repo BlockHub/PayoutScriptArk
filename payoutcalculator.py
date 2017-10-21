@@ -10,6 +10,8 @@ import datetime
 import os
 import copy
 
+import acidfile
+import rotlog as rl
 
 def get_transactionlist(cursor):
     command = """ SELECT transactions."id", transactions."amount",
@@ -230,51 +232,75 @@ def test_print(payouts, delegateshare, set_api=None):
     for i in payouts:
         total += payouts[i]['share']
 
-    print(tabulate(table, ['ADDRESS', 'SHARE', 'ROI', 'BALANCE', 'STATUS']))
-    print('total to be paid: ', total, 'delegateshare before txfees: ', delegateshare)
+    rl.debug(tabulate(table, ['ADDRESS', 'SHARE', 'ROI', 'BALANCE', 'STATUS']))
+    rl.debug('total to be paid: ', total, 'delegateshare before txfees: ', delegateshare)
 
 
 if __name__ == '__main__':
+    rl.logfile(config.LOGGING['logfile'])
+    rl.verbose(config.LOGGING['verbosity'])
+    
+    rl.info('payoutcalculator: starting')
+        
+    # Create the payout dir if it doesn't exist yet.
+    os.makedirs(config.PAYOUTDIR, exist_ok=True)
+    
     # initialize DB cursor
     cursor = parky.DbCursor()
 
     # execute all sql queries first, since the DB is updated every 8 seconds,
     # the odds of the data having changed is lower.
+    rl.debug('payoutcalculator: fetching blocks')
     unnamed_blocks = get_blocks(cursor)
+    
+    rl.debug('payoutcalculator: fetching transactions')
     unnamed_transactions = get_transactionlist(cursor)
+    
+    rl.debug('payoutcalculator: fetching voters')
     voter_list = get_all_voters(cursor)
 
     # naming the query objects (mainly for making the code more readable, does
     # decrease performance by an itsy bitsy
+    rl.debug('payoutcalculator: naming blocks')
     named_blocks = name_blocks(unnamed_blocks)
+
+    rl.debug('payoutcalculator: naming transactions')
     named_transactions = name_transactionslist(unnamed_transactions)
+    
+    rl.debug('payoutcalculator: naming voters')
     voter_dict = create_voterdict(voter_list)
 
     number_of_blocks = config.CALCULATIONS['blocks']
+    rl.debug('payoutcalculator: considering %d blocks', number_of_blocks)
 
     # calculate balances over time for every voter
+    rl.debug('payoutcalculator: getting balance over time for all voters')
     balance_dict = parse_tx(named_transactions, voter_dict, named_blocks)
 
     # calculate the total pool balance and share per voter
+    rl.debug('payoutcalculator: determining pool balance and share per voter')
     updated_balance_dict = cal_share(balance_dict)
 
     # stretch the balances over time to make sure it is the same length as
     # the total number of blocks. (sometimes there is no transaction at all for
     # multiples of 6.8 minutes, so then the last calculated block balance is used
     # for the empty blocks.
+    rl.debug('payoutcalculator: stretching balance info to fill empty blocks')        
     balance_history = stretch(updated_balance_dict, named_blocks)
 
+    rl.debug('payoutcalculator: generating payouts and delegates share')        
     payouts_and_delegateshare = gen_payouts(balance_history, named_blocks)
-    test_print(payouts_and_delegateshare[0], payouts_and_delegateshare[1], set_api=None)
-    save_file = 'payouts_{}'.format(datetime.date.today())
-
-    try:
-        os.remove(save_file)
-    except Exception:
-        pass
-
-    with open(save_file, 'wb') as f:
-        pickle.dump(payouts_and_delegateshare, f)
-        f.close()
-
-
+    test_print(payouts_and_delegateshare[0], payouts_and_delegateshare[1],
+               set_api=False)
+    # Write all payout data.
+    stamp = time.strftime('%Y-%m-%d-%H-%M-%S')
+    rl.info('payoutcalculator: writing %s/%s*', config.PAYOUTDIR, stamp)
+    nfiles = 0
+    for address in payouts_and_delegateshare[0].keys():
+        nfiles += 1
+        savefile = '%s/%s-%s' % (config.PAYOUTDIR, stamp, address)        
+        data = [ address, payouts_and_delegateshare[0][address] ]
+        with acidfile.ACIDWriteFile(savefile) as outfile:
+            pickle.dump(data, outfile)
+    rl.info('payoutcalculator: %d files written', nfiles)
+    rl.info('payoutcalculator: finished')
