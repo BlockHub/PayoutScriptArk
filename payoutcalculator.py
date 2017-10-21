@@ -200,7 +200,8 @@ def gen_payouts(final_balance_dict, blocks):
         for address in final_balance_dict[block]:
             if config.SHARE['TIMESTAMP_BRACKETS']:
                 for i in config.SHARE['TIMESTAMP_BRACKETS']:
-                    if final_balance_dict[block][address]['vote_timestamp'] <= i:
+                    if (final_balance_dict[block][address]['vote_timestamp']
+                        <= i):
                         share = config.SHARE['TIMESTAMP_BRACKETS'][i]
                     else:
                         share = config.SHARE['DEFAULT_SHARE']
@@ -271,13 +272,7 @@ def test_print(payouts, delegateshare, set_api=None):
              'delegateshare before txfees: ', delegateshare)
 
 
-if __name__ == '__main__':
-    # Initialize logging
-    rl.logfile(config.LOGGING['logfile'], progname='payoutcalculator')
-    rl.verbose(config.LOGGING['verbosity'])
-
-    rl.info('starting')
-
+def main():
     ts = utils.get_max_timestamp()
     rl.info('going up to timestamp %d (%s)', ts, utils.arctimestamp(ts))
 
@@ -351,3 +346,16 @@ if __name__ == '__main__':
 
     rl.info('%d files written (including payout to reward wallet)', nfiles)
     rl.info('finished')
+
+if __name__ == '__main__':
+    # Initialize logging
+    rl.logfile(config.LOGGING['logfile'], progname='payoutcalculator')
+    rl.verbose(config.LOGGING['verbosity'])
+    rl.info('starting')
+
+    # Protect the entire run in a try block so we get postmortem info if
+    # applicable.
+    try:
+        main()
+    except Exception as e:
+        rl.fatal('caught exception in main: %s', e)
