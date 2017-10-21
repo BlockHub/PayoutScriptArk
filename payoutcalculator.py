@@ -13,19 +13,6 @@ import copy
 import acidfile
 import rotlog as rl
 
-def get_max_timestamp(cursor):
-    # Fetch the max timestamp as it occurs in table blocks, or return
-    # a previously cached value.
-    if not hasattr(get_max_timestamp, 'timestamp'):
-        r = cursor.execute_and_fetchone(
-            'SELECT MAX(timestamp) FROM blocks')
-        if not r or not r[0]:
-            raise utils.PayoutError('failed to get max timestamp from blocks: '
-                                    + e)
-        rl.info('payoutcalculator: will go up to timestamp %d', r[0])        
-        get_max_timestamp.timestamp = r[0]
-    return get_max_timestamp.timestamp 
-
 def get_transactionlist(cursor):
     command = """
         SELECT transactions."id", transactions."amount",
@@ -45,7 +32,7 @@ def get_transactionlist(cursor):
            WHERE transactions."id" = votes."transactionId"
            AND votes."votes" = '+{1}')
         ORDER BY transactions."timestamp" ASC;""".format(
-            get_max_timestamp(cursor),
+            get_max_timestamp(cursor=cursor),
             config.DELEGATE['PUBKEY'])
     
     cursor.execute(command)
@@ -82,7 +69,7 @@ def get_all_voters(cursor):
                  WHERE transactions."timestamp" <= {0}
                  AND transactions."id" = votes."transactionId" 
                  AND votes."votes" = '+{1}';""".format(
-                     get_max_timestamp(cursor),
+                     get_max_timestamp(cursor=cursor),
                      config.DELEGATE['PUBKEY'])
     
     cursor.execute(command)
@@ -109,7 +96,7 @@ def get_blocks(cursor):
                  WHERE blocks."timestamp" <= {0}
                  AND blocks."generatorPublicKey" = '\\x{1}'
                  ORDER BY blocks."timestamp" ASC""".format(
-                     get_max_timestamp(cursor),
+                     get_max_timestamp(cursor=cursor),
                      config.DELEGATE['PUBKEY'])
     
     cursor.execute(command)

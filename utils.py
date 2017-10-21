@@ -46,11 +46,19 @@ def api_call_cached(func, *args, **kwargs):
     return api_call_cached.cache[cache_key]
 
 
-def get_current_timestamp():
-    cursor = parky.DbCursor()
-    command = """SELECT blocks."timestamp" 
-                 FROM blocks 
-                 ORDER BY blocks."timestamp" DESC
-                 LIMIT 1"""
-    cursor.execute(command)
-    return cursor.fetchone()[0]
+def get_max_timestamp(cursor=None):
+    # Fetch the max timestamp as it occurs in table blocks, or return
+    # a previously cached value.
+
+    if not cursor:
+        cursor = parky.DbCursor()
+        
+    if not hasattr(get_max_timestamp, 'timestamp'):
+        r = cursor.execute_and_fetchone(
+            'SELECT MAX(timestamp) FROM blocks')
+        if not r or not r[0]:
+            raise utils.PayoutError('failed to get max timestamp from blocks: '
+                                    + e)
+        rl.info('payoutcalculator: will go up to timestamp %d', r[0])        
+        get_max_timestamp.timestamp = r[0]
+    return get_max_timestamp.timestamp 

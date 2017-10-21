@@ -22,7 +22,7 @@ def send_transactions(payouts, frq_dict, test=None):
     day_month = datetime.datetime.today().month
     day_week = datetime.datetime.today().weekday()
     totalfees = 0
-    current_timestamp = utils.get_current_timestamp()
+    current_timestamp = utils.get_max_timestamp()
 
     if config.SHARE['COVER_TX_FEES']:
         fees = 0
