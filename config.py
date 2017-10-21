@@ -87,13 +87,17 @@ FREQUENCY_DICT = {
 
 # The payout files will appear in this directory for further processing.
 # The payout script will create the directory if it doesn't exist yet.
-PAYOUTDIR = '/home/ark/payouts'
+PAYOUTDIR     = '/home/ark/payouts'
+# Failed payouts will be moved here for closer inspection:
+PAYOUTFAILDIR = '/home/ark/failedpayouts'
 
 # Where to log stuff. This will be rotated so that the disk doesn't fill
 # up like crazy.
 LOGGING = {
     'logfile'  : '/tmp/ark.log',
-    'verbosity': True,
+    'verbosity': False,
 }
 
-TEST = True
+# This enables the testmode in the payout sender. No payouts are sent,
+# only log statements are generated.
+PAYOUTSENDER_TEST = True
