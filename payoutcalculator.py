@@ -299,8 +299,14 @@ if __name__ == '__main__':
     for address in payouts_and_delegateshare[0].keys():
         nfiles += 1
         savefile = '%s/%s-%s' % (config.PAYOUTDIR, stamp, address)        
-        data = [ address, payouts_and_delegateshare[0][address] ]
+        data = [address, payouts_and_delegateshare[0][address]]
         with acidfile.ACIDWriteFile(savefile) as outfile:
             pickle.dump(data, outfile)
+
+    delegate_file = '%s/%s-%s' % (config.PAYOUTDIR, stamp, config.DELEGATE['REWARDWALLET'])
+    data = [config.DELEGATE['REWARDWALLET'], payouts_and_delegateshare[1]]
+    with acidfile.ACIDWriteFile(delegate_file) as outfile:
+        pickle.dump(data, outfile)
+
     rl.info('payoutcalculator: %d files written', nfiles)
     rl.info('payoutcalculator: finished')
