@@ -96,7 +96,8 @@ if __name__ == '__main__':
     for f in d.glob():
         with acidfile.ACIDReadFile(f) as inf:
             data = pickle.load(inf)
-            tx_res = send_transaction(data, frq_dict, current_timestamp, test=True)
+            tx_res = send_transaction(data, frq_dict, current_timestamp, test=config.TEST)
             if tx_res:
                 os.remove(f)
-            # rename file and keep for retry?
+            else:
+                os.rename(f, 'failtx/' + f)
