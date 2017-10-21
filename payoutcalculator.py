@@ -272,14 +272,14 @@ def test_print(payouts, delegateshare, set_api=None):
 
 
 if __name__ == '__main__':
-    rl.logfile(config.LOGGING['logfile'])
+    # Initialize logging
+    rl.logfile(config.LOGGING['logfile'], progname='payoutcalculator')
     rl.verbose(config.LOGGING['verbosity'])
 
-    rl.info('payoutcalculator: starting')
+    rl.info('starting')
 
     ts = utils.get_max_timestamp()
-    rl.info('payoutcalculator: going up to timestamp %d (%s)',
-            ts, utils.arctimestamp(ts))
+    rl.info('going up to timestamp %d (%s)', ts, utils.arctimestamp(ts))
 
     # Create the payout dir if it doesn't exist yet.
     os.makedirs(config.PAYOUTDIR, exist_ok=True)
@@ -289,51 +289,51 @@ if __name__ == '__main__':
 
     # execute all sql queries first, since the DB is updated every 8 seconds,
     # the odds of the data having changed is lower.
-    rl.debug('payoutcalculator: fetching blocks')
+    rl.debug('fetching blocks')
     unnamed_blocks = get_blocks(cursor)
 
-    rl.debug('payoutcalculator: fetching transactions')
+    rl.debug('fetching transactions')
     unnamed_transactions = get_transactionlist(cursor)
 
-    rl.debug('payoutcalculator: fetching voters')
+    rl.debug('fetching voters')
     voter_list = get_all_voters(cursor)
 
     # naming the query objects (mainly for making the code more readable, does
     # decrease performance by an itsy bitsy
-    rl.debug('payoutcalculator: naming blocks')
+    rl.debug('naming blocks')
     named_blocks = name_blocks(unnamed_blocks)
 
-    rl.debug('payoutcalculator: naming transactions')
+    rl.debug('naming transactions')
     named_transactions = name_transactionslist(unnamed_transactions)
 
-    rl.debug('payoutcalculator: naming voters')
+    rl.debug('naming voters')
     voter_dict = create_voterdict(voter_list)
 
     number_of_blocks = config.CALCULATIONS['blocks']
-    rl.debug('payoutcalculator: considering %d blocks', number_of_blocks)
+    rl.debug('considering %d blocks', number_of_blocks)
 
     # calculate balances over time for every voter
-    rl.debug('payoutcalculator: getting balance over time for all voters')
+    rl.debug('getting balance over time for all voters')
     balance_dict = parse_tx(named_transactions, voter_dict, named_blocks)
 
     # calculate the total pool balance and share per voter
-    rl.debug('payoutcalculator: determining pool balance and share per voter')
+    rl.debug('determining pool balance and share per voter')
     updated_balance_dict = cal_share(balance_dict)
 
     # stretch the balances over time to make sure it is the same length as
     # the total number of blocks. (sometimes there is no transaction at all for
     # multiples of 6.8 minutes, so then the last calculated block balance is
     # used for the empty blocks.
-    rl.debug('payoutcalculator: stretching balance info to fill empty blocks')
+    rl.debug('stretching balance info to fill empty blocks')
     balance_history = stretch(updated_balance_dict, named_blocks)
 
-    rl.debug('payoutcalculator: generating payouts and delegates share')
+    rl.debug('generating payouts and delegates share')
     payouts_and_delegateshare = gen_payouts(balance_history, named_blocks)
     test_print(payouts_and_delegateshare[0], payouts_and_delegateshare[1],
                set_api=False)
     # Write all payout data.
     stamp = utils.timestamp(forfilename=True)
-    rl.info('payoutcalculator: writing %s/%s*', config.PAYOUTDIR, stamp)
+    rl.info('writing %s/%s*', config.PAYOUTDIR, stamp)
     nfiles = 0
     for address in payouts_and_delegateshare[0].keys():
         nfiles += 1
@@ -345,8 +345,9 @@ if __name__ == '__main__':
     delegate_file = '%s/%s-%s' % (config.PAYOUTDIR, stamp,
                                   config.DELEGATE['REWARDWALLET'])
     data = [config.DELEGATE['REWARDWALLET'], payouts_and_delegateshare[1]]
+    nfiles += 1
     with acidfile.ACIDWriteFile(delegate_file) as outfile:
         pickle.dump(data, outfile)
 
-    rl.info('payoutcalculator: %d files written', nfiles)
-    rl.info('payoutcalculator: finished')
+    rl.info('%d files written (including payout to reward wallet)', nfiles)
+    rl.info('finished')
