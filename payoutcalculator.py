@@ -1,17 +1,19 @@
-from collections import namedtuple
-import parky
-import config
-import utils
 from arky import api
+from collections import namedtuple
 from tabulate import tabulate
-import time
-import pickle
-import datetime
-import os
-import copy
 
 import acidfile
+import config
+import copy
+import datetime
+import os
+import parky
+import pickle
 import rotlog as rl
+import sys
+import time
+import traceback
+import utils
 
 def get_transactionlist(cursor):
     command = """
@@ -268,13 +270,13 @@ def test_print(payouts, delegateshare, set_api=None):
         total += payouts[i]['share']
 
     rl.debug(tabulate(table, ['ADDRESS', 'SHARE', 'ROI', 'BALANCE', 'STATUS']))
-    rl.debug('total to be paid: ', total,
-             'delegateshare before txfees: ', delegateshare)
+    rl.debug('total to be paid: %s, delegateshare before txfees: %s',
+             str(total), str(delegateshare))
 
 
 def main():
     ts = utils.get_max_timestamp()
-    rl.info('going up to timestamp %d (%s)', ts, utils.arctimestamp(ts))
+    rl.info('going up to arktimestamp %s', utils.arctimestamp(ts))
 
     # Create the payout dir if it doesn't exist yet.
     os.makedirs(config.PAYOUTDIR, exist_ok=True)
@@ -334,12 +336,14 @@ def main():
         nfiles += 1
         savefile = '%s/%s-%s' % (config.PAYOUTDIR, stamp, address)
         data = [address, payouts_and_delegateshare[0][address]]
+        rl.debug('data for voter payment file %s: %s', savefile, str(data))
         with acidfile.ACIDWriteFile(savefile) as outfile:
             pickle.dump(data, outfile)
 
     delegate_file = '%s/%s-%s' % (config.PAYOUTDIR, stamp,
                                   config.DELEGATE['REWARDWALLET'])
     data = [config.DELEGATE['REWARDWALLET'], payouts_and_delegateshare[1]]
+    rl.debug('data for delegate payment file %s: %s', delegate_file, str(data))
     nfiles += 1
     with acidfile.ACIDWriteFile(delegate_file) as outfile:
         pickle.dump(data, outfile)
@@ -358,4 +362,8 @@ if __name__ == '__main__':
     try:
         main()
     except Exception as e:
-        rl.fatal('caught exception in main: %s', e)
+        tp, vl, tb = sys.exc_info()
+        for line in traceback.format_exception(tp, vl, tb):
+            line = line.replace('\n', ' ')
+            rl.warn('caught exception in main: %s', line)
+        rl.fatal('stopping after exception')
