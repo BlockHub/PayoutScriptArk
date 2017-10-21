@@ -95,7 +95,7 @@ PAYOUTFAILDIR = '/home/ark/failedpayouts'
 # up like crazy.
 LOGGING = {
     'logfile'  : '/tmp/ark.log',
-    'verbosity': False,
+    'verbosity': True,
 }
 
 # This enables the testmode in the payout sender. No payouts are sent,
