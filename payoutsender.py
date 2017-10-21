@@ -6,6 +6,12 @@ import urllib.request
 import json
 import utils
 import pickle
+import os
+import rotlog as rl
+
+
+class TransactionError(Exception):
+    pass
 
 
 def send(address, amount, test):
@@ -14,7 +20,11 @@ def send(address, amount, test):
     else:
         tx = core.Transaction(amount=amount, recipientId=address)
         result = api.broadcast(tx, config.SECRET)
-        print('transactionID = ', result["transactionIds"][0])
+        if result['success']:
+            return True
+        else:
+            rl.warn('payout to {0} for amount {1} failed. Response: {2}'.format(address, amount, result))
+            return False
 
 
 def send_transaction(data, frq_dict, current_timestamp, test=None):
@@ -47,25 +57,24 @@ def send_transaction(data, frq_dict, current_timestamp, test=None):
         if data[1]['last_payout'] < current_timestamp - (3600 * 20):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_DAILY']:
                 totalfees += config.SHARE['FEES']
-                send(address, amount, test=test)
+                return send(address, amount, test=test)
     elif frequency == 2 and day_week == 4:
         if data[1]['last_payout'] < current_timestamp - (3600 * 24):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_WEEKLY']:
                 totalfees += config.SHARE['FEES']
-                send(address, amount, test=test)
+                return send(address, amount, test=test)
     elif frequency == 3 and day_month == 28:
         if data[1]['last_payout'] < current_timestamp - (3600 * 24 * 24):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_MONTHLY']:
                 totalfees += config.SHARE['FEES']
-                send(address, amount, test=test)
+                return send(address, amount, test=test)
 
 
 def get_frequency(use_site=None):
     frq_dict = {}
     if use_site:
-        with urllib.request.urlopen("dutchdelegates.nl/api/user/") as url:
+        with urllib.request.urlopen("dutchdelegate.nl/api/user/") as url:
             data = json.loads(url.read().decode())
-
         for user in data['objects']:
             frq_dict.update({user['wallet']: user['payout_frequency']})
     else:
@@ -77,6 +86,8 @@ def get_frequency(use_site=None):
 
 
 if __name__ == '__main__':
+    rl.verbose(config.LOGGING['verbosity'])
+
     api.use('ark')
     current_timestamp = utils.get_current_timestamp()
     frq_dict = get_frequency(None)
@@ -85,4 +96,7 @@ if __name__ == '__main__':
     for f in d.glob():
         with acidfile.ACIDReadFile(f) as inf:
             data = pickle.load(inf)
-            send_transaction(data, frq_dict, current_timestamp, test=True)
+            tx_res = send_transaction(data, frq_dict, current_timestamp, test=True)
+            if tx_res:
+                os.remove(f)
+            # rename file and keep for retry?
