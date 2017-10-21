@@ -93,7 +93,7 @@ PAYOUTDIR = '/home/ark/payouts'
 # up like crazy.
 LOGGING = {
     'logfile'  : '/tmp/ark.log',
-    'verbosity': False,
+    'verbosity': True,
 }
 
 TEST = True
