@@ -32,9 +32,9 @@ def get_transactionlist(cursor):
            WHERE transactions."id" = votes."transactionId"
            AND votes."votes" = '+{1}')
         ORDER BY transactions."timestamp" ASC;""".format(
-            get_max_timestamp(cursor=cursor),
+            utils.get_max_timestamp(cursor=cursor),
             config.DELEGATE['PUBKEY'])
-    
+
     cursor.execute(command)
     return cursor.fetchall()
 
@@ -65,13 +65,13 @@ def name_transactionslist(transactions):
 
 def get_all_voters(cursor):
     command = """SELECT transactions."recipientId", transactions."timestamp"
-                 FROM transactions, votes 
+                 FROM transactions, votes
                  WHERE transactions."timestamp" <= {0}
-                 AND transactions."id" = votes."transactionId" 
+                 AND transactions."id" = votes."transactionId"
                  AND votes."votes" = '+{1}';""".format(
-                     get_max_timestamp(cursor=cursor),
+                     utils.get_max_timestamp(cursor=cursor),
                      config.DELEGATE['PUBKEY'])
-    
+
     cursor.execute(command)
     return cursor.fetchall()
 
@@ -96,9 +96,9 @@ def get_blocks(cursor):
                  WHERE blocks."timestamp" <= {0}
                  AND blocks."generatorPublicKey" = '\\x{1}'
                  ORDER BY blocks."timestamp" ASC""".format(
-                     get_max_timestamp(cursor=cursor),
+                     utils.get_max_timestamp(cursor=cursor),
                      config.DELEGATE['PUBKEY'])
-    
+
     cursor.execute(command)
     return cursor.fetchall()
 
@@ -231,7 +231,7 @@ def gen_payouts(final_balance_dict, blocks):
                     delegateshare += (
                         final_balance_dict[block][address]['share'] * 2 *
                         utils.ARK * tax)
-                    
+
     return payout_dict, delegateshare
 
 
@@ -274,12 +274,16 @@ def test_print(payouts, delegateshare, set_api=None):
 if __name__ == '__main__':
     rl.logfile(config.LOGGING['logfile'])
     rl.verbose(config.LOGGING['verbosity'])
-    
+
     rl.info('payoutcalculator: starting')
-        
+
+    ts = utils.get_max_timestamp()
+    rl.info('payoutcalculator: going up to timestamp %d (%s)',
+            ts, utils.arctimestamp(ts))
+
     # Create the payout dir if it doesn't exist yet.
     os.makedirs(config.PAYOUTDIR, exist_ok=True)
-    
+
     # initialize DB cursor
     cursor = parky.DbCursor()
 
@@ -287,10 +291,10 @@ if __name__ == '__main__':
     # the odds of the data having changed is lower.
     rl.debug('payoutcalculator: fetching blocks')
     unnamed_blocks = get_blocks(cursor)
-    
+
     rl.debug('payoutcalculator: fetching transactions')
     unnamed_transactions = get_transactionlist(cursor)
-    
+
     rl.debug('payoutcalculator: fetching voters')
     voter_list = get_all_voters(cursor)
 
@@ -301,7 +305,7 @@ if __name__ == '__main__':
 
     rl.debug('payoutcalculator: naming transactions')
     named_transactions = name_transactionslist(unnamed_transactions)
-    
+
     rl.debug('payoutcalculator: naming voters')
     voter_dict = create_voterdict(voter_list)
 
@@ -318,24 +322,31 @@ if __name__ == '__main__':
 
     # stretch the balances over time to make sure it is the same length as
     # the total number of blocks. (sometimes there is no transaction at all for
-    # multiples of 6.8 minutes, so then the last calculated block balance is used
-    # for the empty blocks.
-    rl.debug('payoutcalculator: stretching balance info to fill empty blocks')        
+    # multiples of 6.8 minutes, so then the last calculated block balance is
+    # used for the empty blocks.
+    rl.debug('payoutcalculator: stretching balance info to fill empty blocks')
     balance_history = stretch(updated_balance_dict, named_blocks)
 
-    rl.debug('payoutcalculator: generating payouts and delegates share')        
+    rl.debug('payoutcalculator: generating payouts and delegates share')
     payouts_and_delegateshare = gen_payouts(balance_history, named_blocks)
     test_print(payouts_and_delegateshare[0], payouts_and_delegateshare[1],
                set_api=False)
     # Write all payout data.
-    stamp = time.strftime('%Y-%m-%d-%H-%M-%S')
+    stamp = utils.timestamp(forfilename=True)
     rl.info('payoutcalculator: writing %s/%s*', config.PAYOUTDIR, stamp)
     nfiles = 0
     for address in payouts_and_delegateshare[0].keys():
         nfiles += 1
-        savefile = '%s/%s-%s' % (config.PAYOUTDIR, stamp, address)        
-        data = [ address, payouts_and_delegateshare[0][address] ]
+        savefile = '%s/%s-%s' % (config.PAYOUTDIR, stamp, address)
+        data = [address, payouts_and_delegateshare[0][address]]
         with acidfile.ACIDWriteFile(savefile) as outfile:
             pickle.dump(data, outfile)
+
+    delegate_file = '%s/%s-%s' % (config.PAYOUTDIR, stamp,
+                                  config.DELEGATE['REWARDWALLET'])
+    data = [config.DELEGATE['REWARDWALLET'], payouts_and_delegateshare[1]]
+    with acidfile.ACIDWriteFile(delegate_file) as outfile:
+        pickle.dump(data, outfile)
+
     rl.info('payoutcalculator: %d files written', nfiles)
     rl.info('payoutcalculator: finished')

@@ -59,6 +59,31 @@ def get_max_timestamp(cursor=None):
         if not r or not r[0]:
             raise utils.PayoutError('failed to get max timestamp from blocks: '
                                     + e)
-        rl.info('payoutcalculator: will go up to timestamp %d', r[0])        
         get_max_timestamp.timestamp = r[0]
     return get_max_timestamp.timestamp 
+
+def timestamp(t = None, forfilename=False):
+    """Returns a human-readable timestamp given a Unix timestamp 't' or
+    for the current time. The Unix timestamp is the number of seconds since
+    start of epoch (1970-01-01 00:00:00).
+
+    When forfilename is True, then spaces and semicolons are replace with
+    hyphens. The returned string is usable as a (part of a) filename. """
+
+    datetimesep = ' '
+    timesep     = ':'
+    if forfilename:
+        datetimesep = '-'
+        timesep     = '-'
+
+    return time.strftime('%Y-%m-%d' + datetimesep +
+                         '%H' + timesep + '%M' + timesep + '%S',
+                         time.localtime(t))
+
+def arctimestamp(arct, forfilename=False):
+    """Returns a human-readable timestamp given an Ark timestamp 'arct'.
+    An Ark timestamp is the number of seconds since Genesis block,
+    2017:03:21 15:55:44."""
+
+    t = arct + time.mktime((2017, 3, 21, 15, 55, 44, 0, 0, 0))
+    return '%d %s' % (arct, timestamp(t))

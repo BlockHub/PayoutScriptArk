@@ -95,3 +95,5 @@ LOGGING = {
     'logfile'  : '/tmp/ark.log',
     'verbosity': False,
 }
+
+TEST = True
