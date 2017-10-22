@@ -16,7 +16,8 @@ a new user with only `SELECT` privileges.
 Next edit `config.py` and set your personal details such as who you are
 (delegate's public key etc.) and how you want to pay out your voters. You can
 also blacklist voters or set special payout schemes on a per-voter basis in
-`EXCEPTIONS`.
+`EXCEPTIONS`. The configuration file has comments that mostly clarify what
+a setting does. Just follow the examples.
 
 Also make sure to review all paths (directories) and make them suitable for
 your setup. The sample configuration is built up as follows:
@@ -93,7 +94,7 @@ normally goes to the standard output stream and ends up in the mail). Argument
 
 Once you are satisfied that this works, add `>/dev/null` to the invocation of
 `runpaymentcycle`. This will discard the standard output, but any warnings or
-errors (which go to the standard error stream) wills still be mailed:
+errors (which go to the standard error stream) will still be mailed:
 
 ```shell
 # Set your mail address
@@ -133,9 +134,12 @@ payment, then the payment file is moved to the `PAYOUTFAILDIR`, e.g.
 `/home/ark/failedpayouts`. You can display the file contents by running
 `runpaymentcycle displayer $FILE`.
 
-If you suspect a transient error (e.g., the network was down and payments could
-not be sent), then just move the files from the failure directory to the
-to-be-sent directory, and run the sender again:
+If you suspect a transient error (e.g., the network was down and
+payments could not be sent), then just move the files from the failure
+directory to the to-be-sent directory, and run the sender again
+(adjust accordingly if you have configured other directories `PAYOUTDIR` or
+`PAYOUTFAILDIR`):
+
 
 ``` shell
 mv /home/ark/failedpayouts/* /home/ark/payouts/
