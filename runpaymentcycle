@@ -29,10 +29,12 @@ Usage:
   runpaymentcycle sender
     Picks up prepared payment files and sends payment instructions. Files that
     fail to process are moved to PAYOUTFAILDIR
+  runpaymentcycle both
+    Runs both of the above (calculator and sender)
   runpaymentcycle reporter
     Reports on the generic state
   runpaymentcycle all
-    Runs all of the above
+    Runs all of the above (calculator, sender and reporter)
   runpaymentcycle displayer FILE(s)
     Displays contents of the payment files, used for debugging failures.
 EOF
@@ -58,6 +60,9 @@ case "$1" in
     displayer)
 	run_displayer=1
 	;;
+    both)
+	run_calculator=1
+	run_sender=1
     all)
 	run_calculator=1
 	run_sender=1
