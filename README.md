@@ -61,7 +61,10 @@ Once you are satisfied and want to try for real:
 
 ## Debugging Failed Payments
 
-TBD
+When the payout sender (invoked by `runpaymentcycle sender`) cannot deliver a
+payment, then the payment file is moved to the `PAYOUTFAILDIR`, e.g.
+`/home/ark/failedpayouts`. You can display the file contents by running
+`runpaymentcycle displayer $FILE`.
 
 ## Random Tips
 
