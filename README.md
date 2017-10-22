@@ -59,12 +59,88 @@ Once you are satisfied and want to try for real:
    `config.py` as the `PAYOUTFAILDIR`).
 *  Redo the `runpaymentcycle` steps.
 
+## Automating the Payments
+
+Using `runpaymentcycle` in `cron` is the most obvious way to automate running
+the payment cycles. Depending on your payout frequency you may want to run
+`runpaymentcycle` daily, weekly or even monthly. The following examples assume
+a daily run; adapt `cron`s time settings accordingly if you want different
+settings.
+
+### Initial `crontab`
+
+The `12` in the example below defines the minutes, the `3` defines the hour (3
+AM). The asterisks mean that the command should be run every day of the month,
+every month, every day of the week. 12 minutes past 3 is chosen at random.
+(Folks use 0 0, which means that the Internet gets swamped with traffic at
+midnight. Don't do that.)
+
+So, run `crontab -e` to edit your `cron` definition, and enter something like
+what's shown below:
+
+``` shell
+# Set your mail address
+MAILTO=joe@someaddress.tld
+
+12 3 * * * /home/ark/PayoutScriptArk/runpaymentcycle all
+```
+
+This will possibly generate a lot of mails; even debugging output (which
+normally goes to the standard output stream and ends up in the mail). Argument
+`all` causes `runpaymentcycle` to run the calculator, sender and reporter.
+
+### Less Spam
+
+Once you are satisfied that this works, add `>/dev/null` to the invocation of
+`runpaymentcycle`. This will discard the standard output, but any warnings or
+errors (which go to the standard error stream) wills still be mailed:
+
+```shell
+# Set your mail address
+MAILTO=joe@someaddress.tld
+
+12 3 * * * /home/ark/PayoutScriptArk/runpaymentcycle all >/dev/null
+```
+
+### Not Running the Reporter During Every Cycle
+
+If you are even more confident, you can stop running the reporter during each
+cycle, but run it e.g. just weekly. Argument `both` causes `runpaymentcycle`
+to run only the calculator and sender.
+
+```shell
+# Set your mail address
+MAILTO=joe@someaddress.tld
+
+12 3 * * * /home/ark/PayoutScriptArk/runpaymentcycle both   >/dev/null
+12 6 * * 0 /home/ark/PayoutScriptArk/runpaymentcycle report >/dev/null
+```
+
+The 0 in the invocation of the reporter stands for the day of the week, 0 being
+Sunday.
+
+### Not Running the Reporter At All
+
+When all is stable, you can even comment out the above invocation to run the
+reporter. Remember; if warnings or errors are generated, they will be sent
+anyway. If that happens, you can always log in to your Unix box and run the
+reporter by hand.
+
 ## Debugging Failed Payments
 
 When the payout sender (invoked by `runpaymentcycle sender`) cannot deliver a
 payment, then the payment file is moved to the `PAYOUTFAILDIR`, e.g.
 `/home/ark/failedpayouts`. You can display the file contents by running
 `runpaymentcycle displayer $FILE`.
+
+If you suspect a transient error (e.g., the network was down and payments could
+not be sent), then just move the files from the failure directory to the
+to-be-sent directory, and run the sender again:
+
+``` shell
+mv /home/ark/failedpayouts/* /home/ark/payouts/
+/home/ark/PayoutScriptArk/runpaymentcycle sender
+```
 
 ## Random Tips
 
