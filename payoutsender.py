@@ -139,9 +139,10 @@ def main():
                 data = pickle.load(inf)
                 result = send_transaction(data, frq_dict, max_timestamp)
                 nsucceeded += 1
-            except Exception as e:
+            except:
                 rl.warn('exception while processing payment file %s with '
-                        'data %s: %s' % (f, data, e))
+                        'data %s', f, data)
+                rl.warn(rl.formatexception())
                 nfailed += 1
 
             if config.PAYOUTSENDER_TEST:
