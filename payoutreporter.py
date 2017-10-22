@@ -6,26 +6,26 @@ import utils
 
 def main():
     # Report on active payment files
-    rl.info('===== ACTIVE PAYMENTS (TO BE SENT) =====')
     paymentfiles = sorted(glob.glob(config.PAYOUTDIR + '/*'))
     if len(paymentfiles) == 0:
         rl.info('no payment files to process')
     else:
-        rl.info('%d payment files to process', len(paymentfiles))
-        rl.info('files in alphabetical order are:')
+        rl.warn('===== ACTIVE PAYMENTS (WAITING TO BE SENT) =====')
+        rl.warn('%d payment files to process', len(paymentfiles))
+        rl.warn('files in alphabetical order are:')
         for p in paymentfiles:
-            rl.info('  %s', p)
+            rl.warn('  %s', p)
 
     # Report on failed payment files
-    rl.info('===== FAILED PAYMENTS (COULD NOT BE SENT) =====')
     failedpayments = sorted(glob.glob(config.PAYOUTFAILDIR + '/*'))
     if len(failedpayments) == 0:
         rl.info('no failed payments')
     else:
-        rl.info('%d failed payment files', len(failedpayments))
-        rl.info('files in alphabetical order are:')
+        rl.warn('===== FAILED PAYMENTS (COULD NOT BE SENT) =====')
+        rl.warn('%d failed payment files', len(failedpayments))
+        rl.warn('files in alphabetical order are:')
         for f in failedpayments:
-            rl.info('  %s', f)
+            rl.warn('  %s', f)
 
     # Report on database: what is the last timestamp
     rl.info('===== RECENCY OF ARK NODE DATABASE =====')
