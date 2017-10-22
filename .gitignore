@@ -5,3 +5,4 @@ ark/
 .idea/
 .#*
 #*
+*.save
