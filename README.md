@@ -94,7 +94,9 @@ normally goes to the standard output stream and ends up in the mail). Argument
 
 Once you are satisfied that this works, add `>/dev/null` to the invocation of
 `runpaymentcycle`. This will discard the standard output, but any warnings or
-errors (which go to the standard error stream) will still be mailed:
+errors (which go to the standard error stream) will still be mailed. This
+means that when all goes well and no warnings or errors occur, you don't get
+mail. No news is good news, right.
 
 ```shell
 # Set your mail address
@@ -132,7 +134,11 @@ reporter by hand.
 When the payout sender (invoked by `runpaymentcycle sender`) cannot deliver a
 payment, then the payment file is moved to the `PAYOUTFAILDIR`, e.g.
 `/home/ark/failedpayouts`. You can display the file contents by running
-`runpaymentcycle displayer $FILE`.
+`runpaymentcycle displayer <filenames>`, e.g.:
+
+```shell
+runpaymentcycle displayer /home/ark/failedpayouts/*
+```
 
 If you suspect a transient error (e.g., the network was down and
 payments could not be sent), then just move the files from the failure
