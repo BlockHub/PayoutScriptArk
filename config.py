@@ -102,8 +102,12 @@ PAYOUTFAILDIR = '/home/ark/failedpayouts'
 # Where to log stuff. This will be rotated so that the disk doesn't fill
 # up like crazy.
 LOGGING = {
+    # log to this file and create -1, -2 etc. for historical versions
     'logfile'  : '/tmp/ark.log',
+    # debugging: on or off
     'verbosity': True,
+    # max size of the logfile before it gets rotated to <file>-1
+    'maxsize'  : 1024 * 1024
 }
 
 # This enables the testmode in the payout sender. No payouts are sent,
