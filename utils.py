@@ -36,7 +36,6 @@ def api_call(func, *args, **kwargs):
             return result
         time.sleep(5)
     return result
-    # raise Exception(str(func) + ' failed 15 times')
 
 
 def api_call_cached(func, *args, **kwargs):
