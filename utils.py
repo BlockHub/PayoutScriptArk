@@ -93,7 +93,8 @@ def arctimestamp(arct, forfilename=False):
 def setuplogging(progname):
     """ Set op the logging for rotlog, according to the values in config.py
     and for program 'progname'. Also log the run start. """
-    rl.logfile(config.LOGGING['logfile'], progname=progname)
+    rl.logfile(config.LOGGING['logfile'], maxsize=config.LOGGING['maxsize'],
+               progname=progname)
     rl.verbose(config.LOGGING['verbosity'])
     rl.info('starting')
             
