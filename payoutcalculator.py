@@ -353,9 +353,7 @@ def main():
 
 if __name__ == '__main__':
     # Initialize logging
-    rl.logfile(config.LOGGING['logfile'], progname='payoutcalculator')
-    rl.verbose(config.LOGGING['verbosity'])
-    rl.info('starting')
+    utils.setuplogging('payoutcalculator')
 
     # Protect the entire run in a try block so we get postmortem info if
     # applicable.

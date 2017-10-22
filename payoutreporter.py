@@ -1,6 +1,8 @@
 import config
 import glob
 import rotlog as rl
+import sys
+import traceback
 import utils
 
 def main():
@@ -34,9 +36,7 @@ def main():
 
 if __name__ == '__main__':
     # Set op logging
-    rl.logfile(config.LOGGING['logfile'], progname='payoutreporter')
-    rl.verbose(config.LOGGING['verbosity'])
-    rl.info('starting')
+    utils.setuplogging('payoutreporter')
 
     # Run main, catch any exception and report.
     try:

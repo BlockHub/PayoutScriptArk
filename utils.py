@@ -1,5 +1,7 @@
+import config
 import time
 import parky
+import rotlog as rl
 
 ARK = 100000000
 
@@ -87,3 +89,11 @@ def arctimestamp(arct, forfilename=False):
 
     t = arct + time.mktime((2017, 3, 21, 15, 55, 44, 0, 0, 0))
     return '%d %s' % (arct, timestamp(t))
+
+def setuplogging(progname):
+    """ Set op the logging for rotlog, according to the values in config.py
+    and for program 'progname'. Also log the run start. """
+    rl.logfile(config.LOGGING['logfile'], progname=progname)
+    rl.verbose(config.LOGGING['verbosity'])
+    rl.info('starting')
+            
