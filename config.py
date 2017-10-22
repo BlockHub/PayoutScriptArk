@@ -1,5 +1,6 @@
 import utils
 
+# How to connect to the Ark node Postgresql database.
 CONNECTION = {
     'HOST'    : "localhost",
     'DATABASE': "ark_mainnet",
@@ -9,10 +10,12 @@ CONNECTION = {
     }
 
 CALCULATIONS = {
-    # amount of blocks to calculate backwards to. Should be determined by the voter
-    # waiting for a payout the longest.
+    # amount of blocks to calculate backwards to. Should be determined by
+    # the voter waiting for a payout the longest.
     'blocks': 6874
 }
+
+# Who are we: the delegate's info.
 DELEGATE = {
     'PUBKEY'      : "0218b77efb312810c9a549e2cc658330fcc07f554d465673e08fa304fa59e67a0a",
     'ADDRESS'     : "AZse3vk8s3QEX1bqijFb21aSBeoF6vqLYE",
@@ -20,6 +23,7 @@ DELEGATE = {
     'REWARDWALLET': 'ASYtfgrzdG4A9p5TFDhg22cE7FnV71AHxM'
     }
 
+# How are fees calculated.
 SHARE = {
     'FEES'     : 0.1 * 100000000,
     'FLAT_TAX' : None,
@@ -67,12 +71,16 @@ SHARE = {
 
 }
 
+# Custom payout schemes on a per-voter basis. E.g., you can give a higher
+# share than the default to early adopters.
 EXCEPTIONS = {'AQ9gNYefdLE83GpfTzc1pPyCZgX6KvV9rm': 0.96,
               'APGjeMNZY99WuzZi18NUb8RowEscLV7F7M': 0.96,
               }
 
+# Blacklisted voters: whom do we never wish to pay out.
 BLACKLIST = ['AXzEMF7TC1aH3ax1Luxk6XdyKXDRxnBj4f', ]
 
+# Secret key for broadcasting to the Ark network.
 SECRET = 'string'
 
 # 1 = daily
