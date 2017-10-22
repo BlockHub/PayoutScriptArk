@@ -1,8 +1,18 @@
+# vi editor temp files
 *.swp
+
+# Python bytecode artifacts
 __pycache__
-ark/
 *.pyc
+
+# virtual env
+ark/
+
+# idea stuff
+
 .idea/
+
+# Emacs editor temp files
 .#*
-#*
+\#*
 *.save
