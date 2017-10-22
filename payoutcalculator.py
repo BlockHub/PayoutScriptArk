@@ -12,7 +12,6 @@ import pickle
 import rotlog as rl
 import sys
 import time
-import traceback
 import utils
 
 def get_transactionlist(cursor):
@@ -359,9 +358,7 @@ if __name__ == '__main__':
     # applicable.
     try:
         main()
-    except Exception as e:
-        tp, vl, tb = sys.exc_info()
-        for line in traceback.format_exception(tp, vl, tb):
-            line = line.replace('\n', ' ')
-            rl.warn('caught exception in main: %s', line)
+    except:
+        rl.warn('caught exception in payoutcalculator')
+        rl.warn(rl.formatexception())
         rl.fatal('stopping after exception')

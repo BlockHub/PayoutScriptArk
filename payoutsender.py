@@ -9,7 +9,6 @@ import pickle
 import os
 import rotlog as rl
 import sys
-import traceback
 
 class TransactionError(Exception):
     pass
@@ -155,5 +154,7 @@ if __name__ == '__main__':
     # applicable.
     try:
         main()
-    except Exception as e:
-        rl.fatal('caught exception in main: %s', e)
+    except:
+        rl.warn('caught exception in payoutsender')
+        rl.warn(rl.formatexception())
+        rl.fatal('stopping after exception')

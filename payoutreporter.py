@@ -2,7 +2,6 @@ import config
 import glob
 import rotlog as rl
 import sys
-import traceback
 import utils
 
 def main():
@@ -41,9 +40,7 @@ if __name__ == '__main__':
     # Run main, catch any exception and report.
     try:
         main()
-    except Exception as e:
-        tp, vl, tb = sys.exc_info()
-        for line in traceback.format_exception(tp, vl, tb):
-            line = line.replace('\n', ' ')
-            rl.warn('caught exception in main: %s', line)
-            rl.fatal('stopping after exception')
+    except:
+        rl.warn('caught exception in payoutreporter')
+        rl.warn(rl.formatexception())
+        rl.fatal('stopping after exception')
