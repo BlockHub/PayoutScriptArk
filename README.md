@@ -5,6 +5,10 @@
 > functional for daily, weekly and monthly payouts and uses accurate
 > true-blockweight calculations.
 
+Other project links:
+
+*  [Roadmap](master/vision/ROADMAP.md)
+
 ## How to use the payout script?
 
 The payout scripts will need access to an Ark node Postgresql database. this
