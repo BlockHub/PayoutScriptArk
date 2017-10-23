@@ -7,7 +7,7 @@
 
 Other project links:
 
-*  [Roadmap](master/vision/ROADMAP.md)
+*  [Roadmap](blob/master/ROADMAP.md)
 
 ## How to use the payout script?
 
