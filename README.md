@@ -5,9 +5,9 @@
 > functional for daily, weekly and monthly payouts and uses accurate
 > true-blockweight calculations.
 
-Other project links:
+Other project material:
 
-*  [Roadmap](blob/master/ROADMAP.md)
+*  Read `ROADMAP.md` to see what the future holds and if you wish to contribute.
 
 ## How to use the payout script?
 
