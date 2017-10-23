@@ -1,23 +1,25 @@
 # PayoutScriptArk: PayoutScript for Ark delegates
 
-WARNING: Not all features are specified in the payout script yet. Do not use it
-if you cannot review the code yourself, although it is functional for daily,
-weekly and monthly payouts and uses accurate true-blockweight calculations.
+> WARNING: Not all features are specified in the payout script yet. Do
+> not use it if you cannot review the code yourself, although it is
+> functional for daily, weekly and monthly payouts and uses accurate
+> true-blockweight calculations.
 
 ## How to use the payout script?
 
-You will need access to the Ark node Postgresql database. The payout script
-accesses it. In order to provide access for this script to the database, you
-can edit `/etc/postgresql/9.5/main/pg_hba.conf` and replace `md5` by `trust`.
-Beware that now anyone can access your database and change its contents, so
-make sure to either not share the access, or if you are more experienced, make
-a new user with only `SELECT` privileges.
+The payout scripts will need access to an Ark node Postgresql database. this
+can be located on the local host or accessed via the network. You will need to
+define how to connect to the database in `config.py`: the provided example
+connects to a database on the local machine.
 
-Next edit `config.py` and set your personal details such as who you are
-(delegate's public key etc.) and how you want to pay out your voters. You can
-also blacklist voters or set special payout schemes on a per-voter basis in
-`EXCEPTIONS`. The configuration file has comments that mostly clarify what
-a setting does. Just follow the examples.
+Also in `config.py` set your personal details such as who you are (delegate's
+public key etc.) and how you want to pay out your voters. You can also
+blacklist voters or set special payout schemes on a per-voter basis in
+`EXCEPTIONS`. The configuration file has comments that mostly clarify what a
+setting does. Just follow the examples. (Blacklisting voters is at the moment
+used to exclude delegates from the payment cycle. These have a transaction
+history that needs to be handled differently than 'standard' voters; this is
+work in progress.)
 
 Also make sure to review all paths (directories) and make them suitable for
 your setup. The sample configuration is built up as follows:
@@ -154,5 +156,12 @@ mv /home/ark/failedpayouts/* /home/ark/payouts/
 
 ## Random Tips
 
-Want to develop on windows and access a node through this script? Use an SSH
-tunnel: http://realprogrammers.com/how_to/set_up_an_ssh_tunnel_with_putty.html
+*  Want to develop on windows and access a node through this script? Use an SSH
+   tunnel:
+   http://realprogrammers.com/how_to/set_up_an_ssh_tunnel_with_putty.html
+*  Having trouble connecting to a database on your local machine? You can edit
+   `/etc/postgresql/9.5/main/pg_hba.conf` and replace `md5` by `trust`.  Beware
+   that now anyone can access your database and change its contents, so make
+   sure to either not share the access, or if you are more experienced, make a
+   new user with only `SELECT` privileges. See the Postgresql documentation for
+   more info; an in-depth discussion is out of scope here.
