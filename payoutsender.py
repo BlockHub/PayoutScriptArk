@@ -59,15 +59,16 @@ def send_transaction(data, frq_dict, max_timestamp):
     if address in config.EXCEPTIONS:
         amount = ((data[1]['share'] * config.EXCEPTIONS[address]) - fees)
     else:
-        for i in config.SHARE['TIMESTAMP_BRACKETS']:
-            if data[1]['vote_timestamp'] < i:
-                amount = ((data[1]['share'] *
-                           config.SHARE['TIMESTAMP_BRACKETS'][i])
-                          - fees)
-            else:
-                amount = ((data[1]['share'] *
-                           config.SHARE['DEFAULT_SHARE'])
-                          - fees)
+        if config.SHARE['TIMESTAMP_BRACKETS']:
+            for i in config.SHARE['TIMESTAMP_BRACKETS']:
+                if data[1]['vote_timestamp'] < i:
+                    amount = ((data[1]['share'] *
+                               config.SHARE['TIMESTAMP_BRACKETS'][i])
+                              - fees)
+        else:
+            amount = ((data[1]['share'] *
+            config.SHARE['DEFAULT_SHARE'])
+            - fees)
 
     if address in frq_dict:
         frequency = frq_dict[1]
