@@ -274,6 +274,7 @@ def test_print(payouts, delegateshare, set_api=None):
 
 
 def main():
+    rl.info('checking node')
     if not utils.check_node(51):
         rl.fatal('NodeHeightError, node was more than 51 blocks behind')
         raise utils.NodeHeightError
