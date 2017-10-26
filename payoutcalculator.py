@@ -275,7 +275,8 @@ def test_print(payouts, delegateshare, set_api=None):
 
 def main():
     if not utils.check_node(51):
-        raise utils.NodeHeigtError
+        rl.fatal('NodeHeightError, node was more than 51 blocks behind')
+        raise utils.NodeHeightError
    
     ts = utils.get_max_timestamp()
     rl.info('going up to arktimestamp %s', utils.arctimestamp(ts))
