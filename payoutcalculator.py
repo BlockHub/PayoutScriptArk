@@ -275,7 +275,7 @@ def test_print(payouts, delegateshare, set_api=None):
 
 def main():
     if not utils.check_node(51):
-        raise NodeHeigtError
+        raise utils.NodeHeigtError
    
     ts = utils.get_max_timestamp()
     rl.info('going up to arktimestamp %s', utils.arctimestamp(ts))
