@@ -317,7 +317,7 @@ def main():
     stamp = utils.timestamp(forfilename=True)
     rl.info('writing %s/%s*', config.PAYOUTDIR, stamp)
     nfiles = 0
-    for address in payouts[0].keys():
+    for address in payouts.keys():
         nfiles += 1
         savefile = '%s/%s-%s' % (config.PAYOUTDIR, stamp, address)
         data = [address, payouts[address]]
