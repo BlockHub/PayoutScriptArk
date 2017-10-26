@@ -325,7 +325,7 @@ def main():
         with acidfile.ACIDWriteFile(savefile) as outfile:
             pickle.dump(data, outfile)
 
-    rl.info('%d files written (including payout to reward wallet)', nfiles)
+    rl.info('%d files written', nfiles)
     rl.info('finished')
 
 
