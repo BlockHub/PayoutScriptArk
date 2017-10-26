@@ -83,7 +83,7 @@ def send_transaction(data, frq_dict, max_timestamp):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_MONTHLY']:
                 result = send(address, amount)
                 return result, delegate_share
-    return 0
+    return None, 0
 
 
 def get_frequency(use_site=None):
