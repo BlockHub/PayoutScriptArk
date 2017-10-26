@@ -4,6 +4,7 @@ import rotlog as rl
 import sys
 import utils
 
+
 def main():
     # Report on active payment files
     paymentfiles = sorted(glob.glob(config.PAYOUTDIR + '/*'))

@@ -162,6 +162,7 @@ def main():
 
     send(config.DELEGATE['ADDRESS'], delegate_share)
 
+
 if __name__ == '__main__':
     # Initialize logging.
     utils.setuplogging('payoutsender')

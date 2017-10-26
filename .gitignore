@@ -16,3 +16,4 @@ ark/
 .#*
 \#*
 *.save
+/get-pip.py
