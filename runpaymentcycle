@@ -63,6 +63,7 @@ case "$1" in
     both)
 	run_calculator=1
 	run_sender=1
+	;;
     all)
 	run_calculator=1
 	run_sender=1

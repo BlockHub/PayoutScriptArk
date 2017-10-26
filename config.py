@@ -6,7 +6,7 @@ CONNECTION = {
     'DATABASE': "ark_mainnet",
     'USER'    : "payoutscript",
     'USE_API' :  None,
-    'PASSWORD': 'arkark'
+    'PASSWORD': 'dwleml123'
     }
 
 CALCULATIONS = {
