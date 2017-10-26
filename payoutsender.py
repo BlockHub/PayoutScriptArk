@@ -36,26 +36,15 @@ def send_transaction(data, frq_dict, max_timestamp):
     #         For transactions towards the reward wallet it is just one
     #         float, the reward.
 
-    # If this is sending to the reward wallet, do so right away.
-    try:
-        reward = 1.0 * data[1]
-        send(data[0], reward)
-        return
-    except:
-        pass
-
-    # Nope, must be a voter. Unpack data[1] and adjust the amount to send.
     day_month = datetime.datetime.today().month
     day_week = datetime.datetime.today().weekday()
     totalfees = 0
-
+    address = data[0]
+    amount = 0
     if config.SHARE['COVER_TX_FEES']:
         fees = 0
     else:
         fees = config.SHARE['FEES']
-
-    address = data[0]
-
     if address in config.EXCEPTIONS:
         amount = ((data[1]['share'] * config.EXCEPTIONS[address]) - fees)
     else:
@@ -70,6 +59,8 @@ def send_transaction(data, frq_dict, max_timestamp):
             config.SHARE['DEFAULT_SHARE'])
             - fees)
 
+    delegate_share = data[1]['share'] - amount
+
     if address in frq_dict:
         frequency = frq_dict[1]
     else:
@@ -79,38 +70,43 @@ def send_transaction(data, frq_dict, max_timestamp):
         if data[1]['last_payout'] < max_timestamp - (3600 * 20):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_DAILY']:
                 totalfees += config.SHARE['FEES']
-                return send(address, amount)
+                result = send(address, amount)
+                return result, delegate_share
+
     elif frequency == 2 and day_week == 4:
         if data[1]['last_payout'] < max_timestamp - (3600 * 24):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_WEEKLY']:
                 totalfees += config.SHARE['FEES']
-                return send(address, amount)
+                result = send(address, amount)
+                return result, delegate_share
+
     elif frequency == 3 and day_month == 28:
         if data[1]['last_payout'] < max_timestamp - (3600 * 24 * 24):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_MONTHLY']:
                 totalfees += config.SHARE['FEES']
-                return send(address, amount)
+                result = send(address, amount)
+                return result, delegate_share
+    return 0
 
 
 def get_frequency(use_site=None):
     frq_dict = {}
     if use_site:
-        with urllib.request.urlopen("dutchdelegate.nl/api/user/") as url:
+        with urllib.request.urlopen("https://www.dutchdelegate.nl/api/user/") as url:
             data = json.loads(url.read().decode())
         for user in data['objects']:
-            frq_dict.update({user['wallet']: user['payout_frequency']})
+            frq_dict.update({user['main_ark_wallet']: user['payout_frequency']})
     else:
         data = config.FREQUENCY_DICT
         for user in data['objects']:
             frq_dict.update({user: data['objects'][user]})
-
     return frq_dict
 
 
 def main():
     # Create a dir for the failed payments if it doesn't exist yet.
     os.makedirs(config.PAYOUTFAILDIR, exist_ok=True)
-
+    delegate_share = 0
     api.use('ark')
     max_timestamp = utils.get_max_timestamp()
     frq_dict = get_frequency(None)
@@ -121,7 +117,7 @@ def main():
     nsucceeded = 0
     nfailed    = 0
     if not len(files):
-        rl.error('no files to process in %s', config.PAYOUTDIR)
+        rl.fatal('no files to process in %s', config.PAYOUTDIR)
 
     for f in files:
         filenr += 1
@@ -138,8 +134,10 @@ def main():
             # payment file.
             try:
                 data = pickle.load(inf)
-                result = send_transaction(data, frq_dict, max_timestamp)
-                nsucceeded += 1
+                res = send_transaction(data, frq_dict, max_timestamp)
+                if res[0]:
+                    delegate_share += res[1]
+                    nsucceeded += 1
             except:
                 rl.warn('exception while processing payment file %s with '
                         'data %s', f, data)
@@ -164,6 +162,8 @@ def main():
     # All done, let's see how we did
     rl.info('of %d files, %d failed and %d succeeded',
             filenr, nfailed, nsucceeded)
+
+    send(config.DELEGATE['ADDRESS'], delegate_share)
 
 if __name__ == '__main__':
     # Initialize logging.

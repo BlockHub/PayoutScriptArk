@@ -193,29 +193,17 @@ def gen_payouts(final_balance_dict, blocks):
 
     # returns a dict with address as key, and total amount of ark to be
     # transacted for X blocks
-    delegateshare = 0
     blocks.reverse()
     payout_dict = {}
     last_block = max(final_balance_dict.keys())
     for block in final_balance_dict:
         for address in final_balance_dict[block]:
-            if config.SHARE['TIMESTAMP_BRACKETS']:
-                for i in config.SHARE['TIMESTAMP_BRACKETS']:
-                    if (final_balance_dict[block][address]['vote_timestamp']
-                        <= i):
-                        share = config.SHARE['TIMESTAMP_BRACKETS'][i]
-                    else:
-                        share = config.SHARE['DEFAULT_SHARE']
-                        if address in config.EXCEPTIONS:
-                            share = config.EXCEPTIONS[address]
-                    tax = 1 - share
-
             if final_balance_dict[last_block][address]['last_payout'] < block:
                 if address not in payout_dict:
                     payout_dict.update({address: {
                         'share':
                         (final_balance_dict[block][address]['share'] * 2 *
-                         utils.ARK * share),
+                         utils.ARK),
                         'last_payout':
                         final_balance_dict[last_block][address]['last_payout'],
                         'vote_timestamp':
@@ -223,21 +211,14 @@ def gen_payouts(final_balance_dict, blocks):
                         'status':
                         final_balance_dict[last_block][address]['status']}}
                                                       )
-                    delegateshare += (
-                        final_balance_dict[block][address]['share'] * 2 *
-                        utils.ARK * tax)
                 else:
                     payout_dict[address]['share'] += (
                         final_balance_dict[block][address]['share'] * 2 *
-                        utils.ARK * share)
-                    delegateshare += (
-                        final_balance_dict[block][address]['share'] * 2 *
-                        utils.ARK * tax)
-
-    return payout_dict, delegateshare
+                        utils.ARK)
+    return payout_dict
 
 
-def test_print(payouts, delegateshare, set_api=None):
+def test_print(payouts, set_api=None):
     if set_api:
         api.use('ark')
 
@@ -269,8 +250,8 @@ def test_print(payouts, delegateshare, set_api=None):
         total += payouts[i]['share']
 
     rl.debug(tabulate(table, ['ADDRESS', 'SHARE', 'ROI', 'BALANCE', 'STATUS']))
-    rl.debug('total to be paid: %s, delegateshare before txfees: %s',
-             str(total), str(delegateshare))
+    rl.debug('total to be paid: %s',
+             str(total))
 
 
 def main():
@@ -329,31 +310,24 @@ def main():
     balance_history = stretch(updated_balance_dict, named_blocks)
 
     rl.debug('generating payouts and delegates share')
-    payouts_and_delegateshare = gen_payouts(balance_history, named_blocks)
-    test_print(payouts_and_delegateshare[0], payouts_and_delegateshare[1],
+    payouts = gen_payouts(balance_history, named_blocks)
+    test_print(payouts,
                set_api=False)
     # Write all payout data.
     stamp = utils.timestamp(forfilename=True)
     rl.info('writing %s/%s*', config.PAYOUTDIR, stamp)
     nfiles = 0
-    for address in payouts_and_delegateshare[0].keys():
+    for address in payouts[0].keys():
         nfiles += 1
         savefile = '%s/%s-%s' % (config.PAYOUTDIR, stamp, address)
-        data = [address, payouts_and_delegateshare[0][address]]
+        data = [address, payouts[address]]
         rl.debug('data for voter payment file %s: %s', savefile, str(data))
         with acidfile.ACIDWriteFile(savefile) as outfile:
             pickle.dump(data, outfile)
 
-    delegate_file = '%s/%s-%s' % (config.PAYOUTDIR, stamp,
-                                  config.DELEGATE['REWARDWALLET'])
-    data = [config.DELEGATE['REWARDWALLET'], payouts_and_delegateshare[1]]
-    rl.debug('data for delegate payment file %s: %s', delegate_file, str(data))
-    nfiles += 1
-    with acidfile.ACIDWriteFile(delegate_file) as outfile:
-        pickle.dump(data, outfile)
-
     rl.info('%d files written (including payout to reward wallet)', nfiles)
     rl.info('finished')
+
 
 if __name__ == '__main__':
     # Initialize logging
