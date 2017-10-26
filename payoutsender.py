@@ -31,10 +31,8 @@ def send(address, amount):
 
 def send_transaction(data, frq_dict, max_timestamp):
     # data[0] is always the address.
-    # data[1] can differ: for voters it is a map having keys
+    # data[1] is a map having keys
     #         last_payout, status, share and vote_timestamp.
-    #         For transactions towards the reward wallet it is just one
-    #         float, the reward.
 
     day_month = datetime.datetime.today().month
     day_week = datetime.datetime.today().weekday()
@@ -43,8 +41,10 @@ def send_transaction(data, frq_dict, max_timestamp):
     amount = 0
     if config.SHARE['COVER_TX_FEES']:
         fees = 0
+        del_fees = config.SHARE['FEES']
     else:
         fees = config.SHARE['FEES']
+        del_fees = 0
     if address in config.EXCEPTIONS:
         amount = ((data[1]['share'] * config.EXCEPTIONS[address]) - fees)
     else:
@@ -59,31 +59,28 @@ def send_transaction(data, frq_dict, max_timestamp):
             config.SHARE['DEFAULT_SHARE'])
             - fees)
 
-    delegate_share = data[1]['share'] - amount
+    delegate_share = data[1]['share'] - (amount + del_fees)
 
     if address in frq_dict:
-        frequency = frq_dict[1]
+        frequency = frq_dict[address]
     else:
         frequency = 2
 
     if frequency == 1:
         if data[1]['last_payout'] < max_timestamp - (3600 * 20):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_DAILY']:
-                totalfees += config.SHARE['FEES']
                 result = send(address, amount)
                 return result, delegate_share
 
     elif frequency == 2 and day_week == 4:
         if data[1]['last_payout'] < max_timestamp - (3600 * 24):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_WEEKLY']:
-                totalfees += config.SHARE['FEES']
                 result = send(address, amount)
                 return result, delegate_share
 
     elif frequency == 3 and day_month == 28:
         if data[1]['last_payout'] < max_timestamp - (3600 * 24 * 24):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_MONTHLY']:
-                totalfees += config.SHARE['FEES']
                 result = send(address, amount)
                 return result, delegate_share
     return 0
