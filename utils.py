@@ -2,6 +2,8 @@ import config
 import time
 import parky
 import rotlog as rl
+from arky import api
+
 
 ARK = 100000000
 
@@ -96,4 +98,31 @@ def setuplogging(progname):
                progname=progname)
     rl.verbose(config.LOGGING['verbosity'])
     rl.info('starting')
-            
+ 
+def node_height():
+    cursor = parky.DbCursor()
+    cursor.execute("""
+      SELECT blocks."height" 
+      FROM blocks
+      ORDER BY blocks."height" DESC
+      LIMIT 1; """)
+    height = cursor.fetchall()[0][0]
+    return height
+
+
+def blockchain_height():
+    height = []
+    for i in range(10):
+        api.use('ark')
+        height.append(api_call(api.Block.getBlockchainHeight)['height'])
+    return max(height)
+
+
+def check_node(max_dif):
+    node_h = node_height()
+    blockchain_h = blockchain_height()
+    if node_h != blockchain_height:
+        if blockchain_h - node_h <= max_dif:
+            return True
+    else:
+        return True
