@@ -7,7 +7,8 @@ from arky import api
 
 ARK = 100000000
 
-
+class NodeHeightError(Exception):
+    pass
 
 class BlockIndexError(Exception):
     pass
