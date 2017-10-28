@@ -36,7 +36,6 @@ def send_transaction(data, frq_dict, max_timestamp):
 
     day_month = datetime.datetime.today().month
     day_week = datetime.datetime.today().weekday()
-    totalfees = 0
     address = data[0]
     amount = 0
     if config.SHARE['COVER_TX_FEES']:
@@ -165,10 +164,9 @@ def main():
     # All done, let's see how we did
     rl.info('of %d files, %d failed and %d succeeded',
             filenr, nfailed, nsucceeded)
-    rl.info('Delegatereward: {}   Total to be sent to voters: {}  Total fees: {}'.format(delegate_share,
-                                                                                         total_to_be_sent,
-                                                                                         fees))
-
+    rl.info('Delegatereward: {}   Total to be sent to voters: {}  Total fees: {}'.format(delegate_share/utils.ARK,
+                                                                                         total_to_be_sent/utils.ARK,
+                                                                                         fees/utils.ARK))
     send(config.DELEGATE['REWARDWALLET'], delegate_share)
 
 
