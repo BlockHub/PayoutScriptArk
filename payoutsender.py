@@ -105,6 +105,7 @@ def main():
     os.makedirs(config.PAYOUTFAILDIR, exist_ok=True)
     delegate_share = 0
     total_to_be_sent = 0
+    fees = 0
     api.use('ark')
     max_timestamp = utils.get_max_timestamp()
     frq_dict = get_frequency(None)
@@ -138,6 +139,7 @@ def main():
                 if result:
                     delegate_share += res[1]
                     total_to_be_sent += res[2]
+                    fees += config.SHARE['FEES']
                     nsucceeded += 1
             except:
                 rl.warn('exception while processing payment file %s with '
@@ -163,7 +165,10 @@ def main():
     # All done, let's see how we did
     rl.info('of %d files, %d failed and %d succeeded',
             filenr, nfailed, nsucceeded)
-    rl.info('Delegatereward: {}   Total to be sent: {}'.format(delegate_share, total_to_be_sent))
+    rl.info('Delegatereward: {}   Total to be sent to voters: {}  Total fees: {}'.format(delegate_share,
+                                                                                         total_to_be_sent,
+                                                                                         fees))
+
     send(config.DELEGATE['REWARDWALLET'], delegate_share)
 
 
