@@ -60,7 +60,7 @@ def send_transaction(data, frq_dict, max_timestamp):
             - fees)
 
     delegate_share = data[1]['share'] - (amount + del_fees)
-
+    rl.debug('delegateshare for {}: {}'.format(data[0], delegate_share))
     if address in frq_dict:
         frequency = frq_dict[address]
     else:
@@ -72,7 +72,7 @@ def send_transaction(data, frq_dict, max_timestamp):
                 result = send(address, amount)
                 return result, delegate_share
 
-    elif frequency == 2 and day_week == 4:
+    elif frequency == 2 and day_week == 5:
         if data[1]['last_payout'] < max_timestamp - (3600 * 24):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_WEEKLY']:
                 result = send(address, amount)
@@ -132,6 +132,7 @@ def main():
             try:
                 data = pickle.load(inf)
                 res = send_transaction(data, frq_dict, max_timestamp)
+                rl.debug('result of send: {}'.format(res))
                 if res[0]:
                     delegate_share += res[1]
                     nsucceeded += 1
@@ -159,8 +160,8 @@ def main():
     # All done, let's see how we did
     rl.info('of %d files, %d failed and %d succeeded',
             filenr, nfailed, nsucceeded)
-
-    send(config.DELEGATE['ADDRESS'], delegate_share)
+    rl.info('Delegatereward: {}'.format(delegate_share))
+    send(config.DELEGATE['REWARDWALLET'], delegate_share)
 
 
 if __name__ == '__main__':

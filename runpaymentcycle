@@ -9,7 +9,7 @@
 # If you have Python3 virtual environment set up, point here to its 'activate'
 # file. If you don't have a venv, then all modules etc. must be available to
 # the global Python.
-VENV_ACTIVATE="/home/ark/PayoutScriptArk/ark/bin/activate"
+VENV_ACTIVATE="/home/ark/PayoutScriptArk/venv/bin/activate"
 
 # How to invoke your Python. It must be version 3. Usually the default below
 # is ok.
