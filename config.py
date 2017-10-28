@@ -56,9 +56,9 @@ SHARE = {
     # If a voter has 1 Ark, and MIN_BALANCE == 2 Ark, it is counted as 0 Ark
     'MAX_BALANCE'                  : None,
     'MIN_BALANCE'                  : None,
-    'MIN_PAYOUT_BALANCE_DAILY'     : 3 * utils.ARK,
+    'MIN_PAYOUT_BALANCE_DAILY'     : 2 * utils.ARK,
     'MIN_PAYOUT_BALANCE_WEEKLY'    : 0.1 * utils.ARK,
-    'MIN_PAYOUT_BALANCE_MONTHLY'   : 0.1 * utils.ARK,
+    'MIN_PAYOUT_BALANCE_MONTHLY'   : 0.0001 * utils.ARK,
     'COVER_TX_FEES'                : True,
     'COVER_VOTING_FEES'            : False,
     'MAX_BALANCE_COVER_TX_FEES'    : False,

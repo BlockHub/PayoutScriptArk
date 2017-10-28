@@ -70,19 +70,19 @@ def send_transaction(data, frq_dict, max_timestamp):
         if data[1]['last_payout'] < max_timestamp - (3600 * 20):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_DAILY']:
                 result = send(address, amount)
-                return result, delegate_share
+                return result, delegate_share, amount
 
     elif frequency == 2 and day_week == 5:
         if data[1]['last_payout'] < max_timestamp - (3600 * 24):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_WEEKLY']:
                 result = send(address, amount)
-                return result, delegate_share
+                return result, delegate_share, amount
 
     elif frequency == 3 and day_month == 28:
         if data[1]['last_payout'] < max_timestamp - (3600 * 24 * 24):
             if amount > config.SHARE['MIN_PAYOUT_BALANCE_MONTHLY']:
                 result = send(address, amount)
-                return result, delegate_share
+                return result, delegate_share, amount
     return None, 0
 
 
@@ -104,6 +104,7 @@ def main():
     # Create a dir for the failed payments if it doesn't exist yet.
     os.makedirs(config.PAYOUTFAILDIR, exist_ok=True)
     delegate_share = 0
+    total_to_be_sent = 0
     api.use('ark')
     max_timestamp = utils.get_max_timestamp()
     frq_dict = get_frequency(None)
@@ -132,9 +133,11 @@ def main():
             try:
                 data = pickle.load(inf)
                 res = send_transaction(data, frq_dict, max_timestamp)
+                result = res[0]
                 rl.debug('result of send: {}'.format(res))
-                if res[0]:
+                if result:
                     delegate_share += res[1]
+                    total_to_be_sent += res[2]
                     nsucceeded += 1
             except:
                 rl.warn('exception while processing payment file %s with '
@@ -160,7 +163,7 @@ def main():
     # All done, let's see how we did
     rl.info('of %d files, %d failed and %d succeeded',
             filenr, nfailed, nsucceeded)
-    rl.info('Delegatereward: {}'.format(delegate_share))
+    rl.info('Delegatereward: {}   Total to be sent: {}'.format(delegate_share, total_to_be_sent))
     send(config.DELEGATE['REWARDWALLET'], delegate_share)
 
 
