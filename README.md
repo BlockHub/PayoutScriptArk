@@ -69,14 +69,15 @@ PAYOUTCALCULATOR_TEST = True
 PAYOUTSENDER_TEST = True
 ```
 
-Next edit plugandplay.py with your connection parameters. The function is inside main() (I will change this later to be edited in config.py):
+Next edit the CONNECTION settings with your connection parameters. 
 
 ```python
-ark.set_connection(
-        host='localhost',
-        database='ark_mainnet',
-        user='ark',
-        password=None)
+CONNECTION = {
+    'HOST': None,
+    'DATABASE': None,
+    'USER': None,
+    'PASSWORD': None,
+}
 ```
 Now we should be able to do a test run and see if everything works.
 
@@ -84,7 +85,7 @@ Now we should be able to do a test run and see if everything works.
 python plugandplay.py
 ```
 
-This should take approximately 2 minutes.
+This should take approximately 5 minutes.
 
 Lets check the logs:
 
@@ -92,8 +93,7 @@ Lets check the logs:
 nano /tmp/payoutscriptark.log
 ```
 
-Check the logs. Txparametererros are fine. They are produced when a voter's balance is below the threshold, or if he has had a payout recently
-the sender then skips these until they have accumulated enough Ark.
+Check the logs. TxParameterErrors are fine. They are produced when a voter's balance is below the threshold, or if he has had a payout recently the sender then skips these until they have accumulated enough Ark.
 
 If you are okay with the numbers and everything looks good, you can enter your passhrase:
 
@@ -134,7 +134,7 @@ In this example we run the script every day at 17:00, then again at 18:00, 19:00
 00 21 * * * /home/ark/PayoutScriptArk/runpayments
 ```
 
-The script does not charge a fee whatsover. If you use it, consider donating to 'AJwHyHAArNmzGfmDnsJenF857ATQevg8HY'
+The script does not charge a fee whatsover. If you use it, consider donating to 'AJwHyHAArNmzGfmDnsJenF857ATQevg8HY', and please us my referall link to create your VPS at digitalocean: https://m.do.co/c/b5eee933a448
 
 
 
