@@ -15,7 +15,7 @@ SENDER_SETTINGS = {
     'BLACKLIST': None,
 
     # The default share, when TIMESTAMP_BRACKETS (see below) do not apply.
-    'DEFAULT_SHARE': 1,
+    'DEFAULT_SHARE': 0.96,
 
     # TIMESTAMP_BRACKETS do not redistribute the amounts to lower brackets,
     # proceeds go to delegate
@@ -37,10 +37,10 @@ SENDER_SETTINGS = {
     # If a voter has 1 Ark, and MIN_BALANCE == 2 Ark, it is counted as 0 Ark
     'MAX_BALANCE'                  : None,
     'MIN_BALANCE'                  : None,
-    'MIN_PAYOUT_BALANCE_DAILY'     : 0,
-    'MIN_PAYOUT_BALANCE_WEEKLY'    : 0,
-    'MIN_PAYOUT_BALANCE_MONTHLY'   : 0,
-    'COVER_TX_FEES'                : True,
+    'MIN_PAYOUT_BALANCE_DAILY'     : 2,
+    'MIN_PAYOUT_BALANCE_WEEKLY'    : 0.1,
+    'MIN_PAYOUT_BALANCE_MONTHLY'   : 0.001,
+    'COVER_TX_FEES'                : False,
     'MAX_BALANCE_COVER_TX_FEES'    : False,
     'MIN_BALANCE_COVER_VOTING_FEES': False,
 
