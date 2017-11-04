@@ -1,5 +1,18 @@
 import logging
 import arkdbtools.config as info
+
+
+CONNECTION = {
+    'HOST': None,
+    'DATABASE': None,
+    'USER': None,
+    'PASSWORD': None,
+}
+
+
+
+
+
 # Who are we: the delegate's info.
 DELEGATE = {
     'PUBKEY'      : None,

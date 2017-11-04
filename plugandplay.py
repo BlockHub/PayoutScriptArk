@@ -14,10 +14,10 @@ DELEGATE_PUBKEY = '0218b77efb312810c9a549e2cc658330fcc07f554d465673e08fa304fa59e
 def main():
     # logger.info('setting connection')
     ark.set_connection(
-        host='localhost',
-        database='ark_mainnet',
-        user='ark',
-        password=None)
+        host=config.CONNECTION['HOST'],
+        database=config.CONNECTION['DATABASE'],
+        user=config.CONNECTION['USER'],
+        password=config.CONNECTION['PASSWORD'])
 
     # check if node is at reasonable height. 51 means you are at maximum
     # 2 forged blocks behind.
@@ -66,10 +66,13 @@ def main():
     successful_payouts = 0
     stored_payouts = 0
     logger.info('starting transmitting payouts')
+    delegate_share = 0
     for payout in payouts:
         data = payout, payouts[payout]
         try:
             result, delegate_reward, amount = ark.Core.payoutsender(data, calculation_timestamp=timestamp)
+            delegate_share += delegate_reward
+
         except ark.TxParameterError:
             stored_payouts += 1
             logger.info('Txparametererror, stored payout')
@@ -80,9 +83,13 @@ def main():
             failed_payouts += 1
             logger.fatal('payout failed for {0}, response: {1}'.format(payout, result))
 
+    ark.Core.send(config.DELEGATE['REWARDWALLET'], delegate_share)
+    logger.info('sent {0} to delegate: {1}'.format(delegate_share, config.DELEGATE['REWARDWALLET']))
+
     logger.info('Successful payouts: {0}, failed payouts: {1}'.format(successful_payouts, failed_payouts))
     logger.info(('failed payouts: {}'.format(failed_payouts)))
     logger.info('stored payouts: {}'.format(stored_payouts))
+    logger.info('delegate_share: {}'.format(delegate_share))
 
 
 if __name__ == '__main__':
