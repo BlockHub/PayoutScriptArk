@@ -1,8 +1,5 @@
 #!/bin/bash
 
-# Runpaymentcycle: run all components (payment calculator, sender, reporter)
-# or just some of them.
-
 # Config section: adapt to your own needs.
 # ----------------------------------------
 
@@ -18,41 +15,27 @@ PYTHON3="python3"
 # End of configuration. You should not alter anything below here.
 # ---------------------------------------------------------------
 
-# Print usage and die
-usage() {
-    cat <<EOF 1>&2
-This is runpaymentcycle, the control script for all subparts.
-Usage:
-  plugandplay
-  complete tbw payouts and sender, with settings incorporated
-EOF
+# Let's see whether plugandplay.py script is already running. If so,
+# don't start it again. This prevents overruns.
+if [ -f /tmp/runpayments.is.running ] ; then
+    echo "runpayments is already running, not starting it again" 1>&2
     exit 1
-}
-
-# Test arguments: what should we run.
-[ -z "$1" ] && usage
-run_plugandplay=0
-
-case "$1" in
-    calculator)
-	run_plugandplay=1
-	;;
-    *)
-	usage
-    esac
+fi
+trap "rm -f /tmp/runpayments.is.running" EXIT
+touch /tmp/runpayments.is.running
 
 # Source the virtual env if applicable
 if [ -n "${VENV_ACTIVATE}" ] ; then
-    source "${VENV_ACTIVATE}" || exit 1
+    source "${VENV_ACTIVATE}"
+    if [ $? -ne 0 ] ; then
+       echo "runpayments could not source ${VENV_ACTIVATE}" 1>&2
+       echo "edit runpayments and set the configuration"    1>&2
+       exit 1
+    fi
 fi
 
 # Determine the base dir of this script. The Python scripts are expected
 # right next to it.
 dir=$(dirname $0)
 
-# Run the parts.
-if [ "${run_plugandplay}" -eq 1 ] ; then
-    "${PYTHON3}" "${dir}/plugandplay.py" || exit 1
-fi
-
-
+"${PYTHON3}" "${dir}/plugandplay.py" || exit 1
