@@ -32,7 +32,7 @@ your setup. The sample configuration is built up as follows:
 *  The home directory of the user is `/home/ark`
 *  Payouts are written to `/home/ark/payouts`
 *  Payout files that fail to send are moved to `/home/ark/failedpayouts`
-*  Actions are logged to `/tmp/ark.log`
+*  Actions are logged to `/tmp/payoutscriptark.log`
 
 Next, have a look at `runpaymentcycle`. This is a bash script to tie it all
 together. If necessary, change the configuration variables at the top. Then you
@@ -158,3 +158,7 @@ directory to the to-be-sent directory, and run the sender again
 mv /home/ark/failedpayouts/* /home/ark/payouts/
 /home/ark/PayoutScriptArk/runpaymentcycle sender
 ```
+
+## Customizing the payoutsettings
+This payoutscript uses the basic arkdbtools payoutsender. you can read
+more on the arkdbtools at https://github.com/Nijmegen-Consultancy-Group/arkdbtools

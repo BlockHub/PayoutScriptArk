@@ -1,36 +1,21 @@
-import utils
-
-# How to connect to the Ark node Postgresql database.
-CONNECTION = {
-    'HOST'    : "localhost",
-    'DATABASE': "ark_mainnet",
-    'USER'    : "payoutscript",
-    'USE_API' :  None,
-    'PASSWORD': 'dwleml123'
-    }
-
-CALCULATIONS = {
-    # amount of blocks to calculate backwards to. Should be determined by
-    # the voter waiting for a payout the longest.
-    'blocks': 6874
-}
-
+import logging
+import arkdbtools.config as info
 # Who are we: the delegate's info.
 DELEGATE = {
-    'PUBKEY'      : "0218b77efb312810c9a549e2cc658330fcc07f554d465673e08fa304fa59e67a0a",
-    'ADDRESS'     : "AZse3vk8s3QEX1bqijFb21aSBeoF6vqLYE",
+    'PUBKEY'      : None,
+    'ADDRESS'     : None,
     'PASSPHRASE'  : None,
-    'REWARDWALLET': 'ASYtfgrzdG4A9p5TFDhg22cE7FnV71AHxM'
+    'REWARDWALLET': None,
     }
 
 # How are fees calculated.
-SHARE = {
-    'FEES'     : 0.1 * 100000000,
+SENDER_SETTINGS = {
+    'FEES'     : info.TX_FEE,
     'FLAT_TAX' : None,
     'BLACKLIST': None,
 
     # The default share, when TIMESTAMP_BRACKETS (see below) do not apply.
-    'DEFAULT_SHARE': 0.95,
+    'DEFAULT_SHARE': 1,
 
     # TIMESTAMP_BRACKETS do not redistribute the amounts to lower brackets,
     # proceeds go to delegate
@@ -39,11 +24,7 @@ SHARE = {
     # 200k Ark = 80% share, and if voted after 8th of september = 90% share,
     # the total share for this voter
     # is 80% * 90% = 0.64%.
-    'TIMESTAMP_BRACKETS':
-    {
-        float('inf'): 0.95,
-        16247647    : 0.96
-    },
+    'TIMESTAMP_BRACKETS': None,
 
     # BALANCE_BRACKETS do not redistribute the amounts to lower brackets,
     # proceeds go to delegate
@@ -56,11 +37,10 @@ SHARE = {
     # If a voter has 1 Ark, and MIN_BALANCE == 2 Ark, it is counted as 0 Ark
     'MAX_BALANCE'                  : None,
     'MIN_BALANCE'                  : None,
-    'MIN_PAYOUT_BALANCE_DAILY'     : 2 * utils.ARK,
-    'MIN_PAYOUT_BALANCE_WEEKLY'    : 0.1 * utils.ARK,
-    'MIN_PAYOUT_BALANCE_MONTHLY'   : 0.0001 * utils.ARK,
+    'MIN_PAYOUT_BALANCE_DAILY'     : 0,
+    'MIN_PAYOUT_BALANCE_WEEKLY'    : 0,
+    'MIN_PAYOUT_BALANCE_MONTHLY'   : 0,
     'COVER_TX_FEES'                : True,
-    'COVER_VOTING_FEES'            : False,
     'MAX_BALANCE_COVER_TX_FEES'    : False,
     'MIN_BALANCE_COVER_VOTING_FEES': False,
 
@@ -68,17 +48,18 @@ SHARE = {
     # administrative purposes
     # Example: 'Thanks for voting! ::VOTINGFEE::
     'PERSONAL_MESSAGE': None,
+    'DAY_WEEKLY_PAYOUT': 5,
+    'DAY_MONTHLY_PAYOUT': 15,
+    'WAIT_TIME_DAILY': 20*info.HOUR_SEC
 
 }
 
 # Custom payout schemes on a per-voter basis. E.g., you can give a higher
 # share than the default to early adopters.
-EXCEPTIONS = {'AQ9gNYefdLE83GpfTzc1pPyCZgX6KvV9rm': 0.96,
-              'APGjeMNZY99WuzZi18NUb8RowEscLV7F7M': 0.96,
-              }
+SHARE_EXCEPTIONS = None
 
 # Blacklisted voters: whom do we never wish to pay out.
-BLACKLIST = ['AXzEMF7TC1aH3ax1Luxk6XdyKXDRxnBj4f', ]
+BLACKLIST = None
 
 # Secret key for broadcasting to the Ark network.
 SECRET = 'string'
@@ -88,10 +69,10 @@ SECRET = 'string'
 # 3 = monthly, on the 28th
 
 FREQUENCY_DICT = {
-    'objects':{
         'address': 1,               
     }
-}
+
+HARD_EXCEPTIONS = None
 
 # The payout files will appear in this directory for further processing.
 # The payout script will create the directory if it doesn't exist yet.
@@ -103,13 +84,11 @@ PAYOUTFAILDIR = '/home/ark/failedpayouts'
 # up like crazy.
 LOGGING = {
     # log to this file and create -1, -2 etc. for historical versions
-    'logfile'  : '/tmp/ark.log',
-    # debugging: on or off
-    'verbosity': True,
-    # max size of the logfile before it gets rotated to <file>-1
-    'maxsize'  : 1024 * 1024
+    'LOGDIR'  : '/tmp/payoutscriptark.log',
+    'LOGGING_LEVEL': logging.INFO
 }
 
 # This enables the testmode in the payout sender. No payouts are sent,
 # only log statements are generated.
+PAYOUTCALCULATOR_TEST = True
 PAYOUTSENDER_TEST = True

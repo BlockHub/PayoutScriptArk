@@ -51,11 +51,13 @@ class ACIDWriteFile:
   def __enter__(self):
     return self
 
+
   def __exit__(self, exc_type, exc_value, traceback):
     # Close the tmpfile we've been writing to and atomically create
     # the user-requested output file.
     self._outfile.close()
     os.rename(self._tmpname, self._filename)
+
 
 class ACIDReadFile:
 
