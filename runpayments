@@ -1,0 +1,58 @@
+#!/bin/bash
+
+# Runpaymentcycle: run all components (payment calculator, sender, reporter)
+# or just some of them.
+
+# Config section: adapt to your own needs.
+# ----------------------------------------
+
+# If you have Python3 virtual environment set up, point here to its 'activate'
+# file. If you don't have a venv, then all modules etc. must be available to
+# the global Python.
+VENV_ACTIVATE="/home/ark/PayoutScriptArk/venv/bin/activate"
+
+# How to invoke your Python. It must be version 3. Usually the default below
+# is ok.
+PYTHON3="python3"
+
+# End of configuration. You should not alter anything below here.
+# ---------------------------------------------------------------
+
+# Print usage and die
+usage() {
+    cat <<EOF 1>&2
+This is runpaymentcycle, the control script for all subparts.
+Usage:
+  plugandplay
+  complete tbw payouts and sender, with settings incorporated
+EOF
+    exit 1
+}
+
+# Test arguments: what should we run.
+[ -z "$1" ] && usage
+run_plugandplay=0
+
+case "$1" in
+    calculator)
+	run_plugandplay=1
+	;;
+    *)
+	usage
+    esac
+
+# Source the virtual env if applicable
+if [ -n "${VENV_ACTIVATE}" ] ; then
+    source "${VENV_ACTIVATE}" || exit 1
+fi
+
+# Determine the base dir of this script. The Python scripts are expected
+# right next to it.
+dir=$(dirname $0)
+
+# Run the parts.
+if [ "${run_plugandplay}" -eq 1 ] ; then
+    "${PYTHON3}" "${dir}/plugandplay.py" || exit 1
+fi
+
+
