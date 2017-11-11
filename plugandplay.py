@@ -34,7 +34,7 @@ def main():
     ark.set_delegate(
         address= config.DELEGATE['ADDRESS'],
         pubkey=  config.DELEGATE['PUBKEY'],
-        secret=  config.DELEGATE['SECRET'],
+        secret=  config.DELEGATE['PASSPHRASE'],
     )
     logger.debug('setting delegate: {0}, {1}'.format(config.DELEGATE['ADDRESS'], config.DELEGATE['PUBKEY']))
 
