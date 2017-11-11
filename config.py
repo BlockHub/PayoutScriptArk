@@ -1,17 +1,13 @@
 import logging
 import arkdbtools.config as info
 
-
+# How to connect to the ark-node
 CONNECTION = {
     'HOST': None,
     'DATABASE': None,
     'USER': None,
     'PASSWORD': None,
 }
-
-
-
-
 
 # Who are we: the delegate's info.
 DELEGATE = {
