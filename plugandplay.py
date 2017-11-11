@@ -4,11 +4,10 @@ import logging.handlers
 import config
 import pickle
 
-'''We'll use the same RotatingFileHandler as arkdbtools. However in production I recommend
-using https://sentry.io/'''
-
-DELEGATE_ADDRESS = 'AZse3vk8s3QEX1bqijFb21aSBeoF6vqLYE'
-DELEGATE_PUBKEY = '0218b77efb312810c9a549e2cc658330fcc07f554d465673e08fa304fa59e67a0a'
+'''
+We'll use the same RotatingFileHandler as arkdbtools. However in production I recommend
+using https://sentry.io/
+'''
 
 
 def main():
@@ -31,12 +30,13 @@ def main():
         logger.info('Node was within 51 blocks of the network')
 
 
-    logger.debug('setting delegate: {0}, {1}'.format(DELEGATE_ADDRESS, DELEGATE_PUBKEY))
 
     ark.set_delegate(
-        address= DELEGATE_ADDRESS,
-        pubkey=  DELEGATE_PUBKEY
+        address= config.DELEGATE['ADDRESS'],
+        pubkey=  config.DELEGATE['PUBKEY'],
+        secret=  config.DELEGATE['SECRET'],
     )
+    logger.debug('setting delegate: {0}, {1}'.format(config.DELEGATE['ADDRESS'], config.DELEGATE['PUBKEY']))
 
     ark.set_calculation()
 
