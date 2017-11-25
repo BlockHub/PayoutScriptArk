@@ -17,11 +17,19 @@ DELEGATE = {
     'REWARDWALLET': None,
     }
 
+CALCULATION_SETTINGS = {
+    'STARTBLOCK_CALCULATION': 0,
+
+}
+
+
 # How are fees calculated.
 SENDER_SETTINGS = {
-
-    # The default share, when TIMESTAMP_BRACKETS (see below) do not apply.
+    # at calculation, wallet has to be a current voter
+    'REQUIRE_CURRENT_VOTER': True,
+    # The default share ratio
     'DEFAULT_SHARE': 1,
+    # startblock calculation
 
     # any balance above max balance or below min balance is not taken in the
     # calculation (the ark is divided amongst voters and delegate)

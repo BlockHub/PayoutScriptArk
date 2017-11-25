@@ -29,8 +29,6 @@ def main():
     #         raise ark.NodeDbError('NodeDbError, node was more than 51 blocks behind')
     #     logger.info('Node was within 51 blocks of the network')
 
-
-
     ark.set_delegate(
         address= config.DELEGATE['ADDRESS'],
         pubkey=  config.DELEGATE['PUBKEY'],
@@ -43,7 +41,7 @@ def main():
     )
 
     print('starting calculation')
-    payouts, timestamp = ark.Delegate.trueshare()
+    payouts, timestamp = ark.Delegate.trueshare(start_block=config.CALCULATION_SETTINGS['STARTBLOCK_CALCULATION'])
 
     if config.PAYOUTCALCULATOR_TEST:
         for i in payouts:
@@ -58,6 +56,7 @@ def main():
         fees = info.TX_FEE
     ark.set_sender(payoutsender_test=config.PAYOUTCALCULATOR_TEST)
     current_day = datetime.datetime.today().weekday()
+
     # lets deal with the exceptions first:
     try:
         for x in config.HARD_EXCEPTIONS:
@@ -81,6 +80,20 @@ def main():
         if amount > config.SENDER_SETTINGS['MIN_PAYOUT_BALANCE'] \
         and config.SENDER_SETTINGS['DAY_WEEKLY_PAYOUT'] == current_day \
         and payouts[payout]['last_payout'] < timestamp - config.SENDER_SETTINGS['WAIT_TIME']:
+
+            if config.SENDER_SETTINGS['REQUIRE_CURRENT_VOTER'] and payouts[payout]['vote_timestamp']:
+                try:
+                    res = ark.Core.send(
+                        address=payout,
+                        amount=amount,
+                        smartbridge=config.SENDER_SETTINGS['PERSONAL_MESSAGE'],
+                        secret=config.DELEGATE['PASSPHRASE'])
+                    delegate_share += payouts[payout]['share'] - amount
+                    logger.debug(res)
+                except Exception:
+                    logger.exception('failed transaction:')
+                continue
+
             try:
                 res = ark.Core.send(
                     address=payout,
@@ -95,11 +108,6 @@ def main():
         address=config.DELEGATE['REWARDWALLET'],
         amount=delegate_share,
         secret=config.DELEGATE['PASSPHRASE'])
-
-
-
-
-
 
 
 if __name__ == '__main__':
