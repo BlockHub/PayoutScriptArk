@@ -94,7 +94,7 @@ def format_payments(payouts, timestamp):
                 res.update({
                     config.HARD_EXCEPTIONS[x]: amount,
                 })
-    except Exception:
+    except TypeError:
         logger.exception('failed in setting payout for hard exceptions')
 
     return res, delegate_share
@@ -156,7 +156,7 @@ if __name__ == '__main__':
             logger.info('FORMATTED PAYMENTS')
             for i in formatted_payouts:
                 logger.info('{} ---- {}'.format(i, formatted_payouts[i]/info.ARK))
-
+            logger.info('DELEGATESHARE: {}'.format(delegate_share))
         else:
             logger.info('transmitting payouts')
             transmit_payments(
@@ -167,5 +167,5 @@ if __name__ == '__main__':
                 amount=delegate_share
             )
     except Exception as e:
-        pass
         logger.fatal('caught exception in plugandplay: {}'.format(e))
+        raise
