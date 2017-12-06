@@ -46,6 +46,7 @@ def main():
     if config.PAYOUTCALCULATOR_TEST:
         for i in payouts:
             logger.info('{0} ----  {1}(share) ---- {2}(balance)'.format(i, payouts[i]['share']/info.ARK, payouts[i]['balance']/info.ARK))
+        return
 
     logger.info('starting transmitting payouts')
     delegate_share = 0
