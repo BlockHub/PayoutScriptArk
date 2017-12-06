@@ -166,6 +166,6 @@ if __name__ == '__main__':
             send_delegate_share(
                 amount=delegate_share
             )
-    except Exception as e:
-        logger.fatal('caught exception in plugandplay: {}'.format(e))
+    except Exception:
+        logger.exception('caught exception in plugandplay: {}'.format(e))
         raise
