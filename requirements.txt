@@ -1,6 +1,6 @@
 amqp==2.2.2
 anyjson==0.3.3
-arkdbtools==0.2.11
+arkdbtools==0.2.13
 Arky==0.4.1
 base58==0.2.5
 billiard==3.5.0.3
