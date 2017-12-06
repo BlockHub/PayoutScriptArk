@@ -21,13 +21,13 @@ def main():
     # check if node is at reasonable height. 51 means you are at maximum
     # 2 forged blocks behind.
     logger.info('checking node')
-    # if config.PAYOUTCALCULATOR_TEST:
-    #     logger.info('--TESTMODE ON-- Node status: {}. Continuing main'.format(ark.Node.check_node(51)))
-    # else:
-    #     if not ark.Node.check_node(51):
-    #         logger.fatal('NodeDbError, node was more than 51 blocks behind')
-    #         raise ark.NodeDbError('NodeDbError, node was more than 51 blocks behind')
-    #     logger.info('Node was within 51 blocks of the network')
+    if config.PAYOUTCALCULATOR_TEST:
+        logger.info('--TESTMODE ON-- Node status: {}. Continuing main'.format(ark.Node.check_node(51)))
+    else:
+        if not ark.Node.check_node(51):
+            logger.fatal('NodeDbError, node was more than 51 blocks behind')
+            raise ark.NodeDbError('NodeDbError, node was more than 51 blocks behind')
+        logger.info('Node was within 51 blocks of the network')
 
     ark.set_delegate(
         address= config.DELEGATE['ADDRESS'],
@@ -49,11 +49,13 @@ def main():
 
     logger.info('starting transmitting payouts')
     delegate_share = 0
+
     print('starting transmission')
+
     if config.SENDER_SETTINGS['COVER_TX_FEES']:
-        fees = 0
-    else:
         fees = info.TX_FEE
+    else:
+        fees = 0
     ark.set_sender(payoutsender_test=config.PAYOUTCALCULATOR_TEST)
     current_day = datetime.datetime.today().weekday()
 
@@ -69,19 +71,36 @@ def main():
                         amount=config.HARD_EXCEPTIONS[x],
                         smartbridge=config.SENDER_SETTINGS['PERSONAL_MESSAGE'],
                         secret=config.DELEGATE['PASSPHRASE'])
-                    delegate_share += (payouts[x]['share'] - config.HARD_EXCEPTIONS[x] - info.TX_FEE)
+                    delegate_share += (payouts[x]['share'] - config.HARD_EXCEPTIONS[x] + fees)
                 except Exception:
                     logger.exception('failed a HARD EXCEPTION transaction')
+
     except Exception:
-        pass
+        logger.exception('failed transmitting hard exception payments')
 
     for payout in payouts:
-        amount = (payouts[payout]['share'] * config.SENDER_SETTINGS['DEFAULT_SHARE'])
+
+        amount = (payouts[payout]['share'] * config.SENDER_SETTINGS['DEFAULT_SHARE']) + fees
+
         if amount > config.SENDER_SETTINGS['MIN_PAYOUT_BALANCE'] \
         and config.SENDER_SETTINGS['DAY_WEEKLY_PAYOUT'] == current_day \
         and payouts[payout]['last_payout'] < timestamp - config.SENDER_SETTINGS['WAIT_TIME']:
 
-            if config.SENDER_SETTINGS['REQUIRE_CURRENT_VOTER'] and payouts[payout]['vote_timestamp']:
+            if config.SENDER_SETTINGS['REQUIRE_CURRENT_VOTER']:
+                if payouts[payout]['status']:
+                    try:
+                        res = ark.Core.send(
+                            address=payout,
+                            amount=amount,
+                            smartbridge=config.SENDER_SETTINGS['PERSONAL_MESSAGE'],
+                            secret=config.DELEGATE['PASSPHRASE'])
+                        delegate_share += payouts[payout]['share'] - amount
+                        logger.debug(res)
+                    except Exception:
+                        logger.exception('failed transaction:')
+                    continue
+
+            else:
                 try:
                     res = ark.Core.send(
                         address=payout,
@@ -92,18 +111,8 @@ def main():
                     logger.debug(res)
                 except Exception:
                     logger.exception('failed transaction:')
-                continue
 
-            try:
-                res = ark.Core.send(
-                    address=payout,
-                    amount=amount,
-                    smartbridge=config.SENDER_SETTINGS['PERSONAL_MESSAGE'],
-                    secret=config.DELEGATE['PASSPHRASE'])
-                delegate_share += payouts[payout]['share'] - amount
-                logger.debug(res)
-            except Exception:
-                logger.exception('failed transaction:')
+    # sending payouts to the rewardwallet
     ark.Core.send(
         address=config.DELEGATE['REWARDWALLET'],
         amount=delegate_share,
