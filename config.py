@@ -48,7 +48,6 @@ SENDER_SETTINGS = {
     # Example: 'Thanks for voting! ::VOTINGFEE::
     'PERSONAL_MESSAGE': None,
     #6 is sunday, 1 is monday etc.
-    'DAY_WEEKLY_PAYOUT': 2,
     # min amount of seconds between a payout
     'WAIT_TIME': 0,
 

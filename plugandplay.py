@@ -101,18 +101,16 @@ def format_payments(payouts, timestamp):
 
 
 def transmit_payments(payouts):
-    current_day = datetime.datetime.today().weekday()
-    if config.SENDER_SETTINGS['DAY_WEEKLY_PAYOUT'] == current_day:
-        for i in payouts:
-            try:
-                ark.Core.send(
-                    address=i,
-                    amount=payouts[i],
-                    secret=config.DELEGATE['PASSPHRASE'],
-                    smartbridge=config.SENDER_SETTINGS['PERSONAL_MESSAGE'],
-                )
-            except ark.ApiError:
-                logger.warning('APIerror, failed a transaction')
+    for i in payouts:
+        try:
+            ark.Core.send(
+                address=i,
+                amount=payouts[i],
+                secret=config.DELEGATE['PASSPHRASE'],
+                smartbridge=config.SENDER_SETTINGS['PERSONAL_MESSAGE'],
+            )
+        except ark.ApiError:
+            logger.warning('APIerror, failed a transaction')
 
 
 def send_delegate_share(amount):
@@ -174,5 +172,5 @@ if __name__ == '__main__':
                 amount=delegate_share
             )
     except Exception:
-        logger.exception('caught exception in plugandplay: ')
+        logger.exception('caught exception in plugandplay')
         raise
