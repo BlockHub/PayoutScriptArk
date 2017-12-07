@@ -82,7 +82,6 @@ def format_payments(payouts, timestamp):
                 res.update({payout: amount})
                 delegate_share += payouts[payout]['share'] - amount
                 logger.debug(res)
-                logger.exception('failed transaction:')
 
 
     try:
