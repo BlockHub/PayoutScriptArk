@@ -104,21 +104,27 @@ def transmit_payments(payouts):
     current_day = datetime.datetime.today().weekday()
     if config.SENDER_SETTINGS['DAY_WEEKLY_PAYOUT'] == current_day:
         for i in payouts:
-            ark.Core.send(
-                address=i,
-                amount=payouts[i],
-                secret=config.DELEGATE['PASSPHRASE'],
-                smartbridge=config.SENDER_SETTINGS['PERSONAL_MESSAGE'],
-            )
+            try:
+                ark.Core.send(
+                    address=i,
+                    amount=payouts[i],
+                    secret=config.DELEGATE['PASSPHRASE'],
+                    smartbridge=config.SENDER_SETTINGS['PERSONAL_MESSAGE'],
+                )
+            except ark.ApiError:
+                logger.warning('APIerror, failed a transaction')
 
 
 def send_delegate_share(amount):
     # sending payouts to the rewardwallet
-    ark.Core.send(
-        address=config.DELEGATE['REWARDWALLET'],
-        amount=amount,
-        secret=config.DELEGATE['PASSPHRASE'],
-        smartbridge=config.DELEGATE['REWARD_SMARTBRIDGE'])
+    try:
+        ark.Core.send(
+            address=config.DELEGATE['REWARDWALLET'],
+            amount=amount,
+            secret=config.DELEGATE['PASSPHRASE'],
+            smartbridge=config.DELEGATE['REWARD_SMARTBRIDGE'])
+    except ark.ApiError:
+        logger.fatal('failed sending delegateshare: {}'.format(amount/info.ARK))
 
 
 if __name__ == '__main__':
@@ -168,5 +174,5 @@ if __name__ == '__main__':
                 amount=delegate_share
             )
     except Exception:
-        logger.exception('caught exception in plugandplay: {}'.format(e))
+        logger.exception('caught exception in plugandplay: ')
         raise
