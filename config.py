@@ -18,7 +18,7 @@ DELEGATE = {
     'ADDRESS'     : None,
     'PASSPHRASE'  : None,
     'REWARDWALLET': None,
-    'REWARD_SMARTBRIDGE': ''
+    'REWARD_SMARTBRIDGE': '',
     }
 
 CALCULATION_SETTINGS = {
