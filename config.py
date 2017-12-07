@@ -47,7 +47,6 @@ SENDER_SETTINGS = {
     # administrative purposes
     # Example: 'Thanks for voting! ::VOTINGFEE::
     'PERSONAL_MESSAGE': None,
-    #6 is sunday, 1 is monday etc.
     # min amount of seconds between a payout
     'WAIT_TIME': 0,
 
@@ -71,3 +70,4 @@ LOGGING = {
 # This enables the testmode in the payout sender. No payouts are sent,
 # only log statements are generated.
 PAYOUTCALCULATOR_TEST = True
+PAYOUTSENDER_TEST = True

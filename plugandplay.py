@@ -29,6 +29,7 @@ def set_params():
     ark.set_calculation(
         blacklist=config.BLACKLIST
     )
+    ark.set_sender(payoutsender_test=config.PAYOUTSENDER_TEST)
 
 
 def check_node_height():
