@@ -1,6 +1,9 @@
 import logging
 import arkdbtools.config as info
 
+# all values used throughout the script are in ark-satoshis, except for the logging of the payouts,
+# to make it more readably. You can use X * info.ARK to denote a X ARK
+
 # How to connect to the ark-node
 CONNECTION = {
     'HOST': None,
@@ -15,6 +18,7 @@ DELEGATE = {
     'ADDRESS'     : None,
     'PASSPHRASE'  : None,
     'REWARDWALLET': None,
+    'REWARD_SMARTBRIDGE': ''
     }
 
 CALCULATION_SETTINGS = {
@@ -44,7 +48,7 @@ SENDER_SETTINGS = {
     # Example: 'Thanks for voting! ::VOTINGFEE::
     'PERSONAL_MESSAGE': None,
     #6 is sunday, 1 is monday etc.
-    'DAY_WEEKLY_PAYOUT': 5,
+    'DAY_WEEKLY_PAYOUT': 2,
     # min amount of seconds between a payout
     'WAIT_TIME': 0,
 
@@ -67,4 +71,4 @@ LOGGING = {
 
 # This enables the testmode in the payout sender. No payouts are sent,
 # only log statements are generated.
-PAYOUTCALCULATOR_TEST = False
+PAYOUTCALCULATOR_TEST = True

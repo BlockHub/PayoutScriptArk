@@ -117,7 +117,8 @@ def send_delegate_share(amount):
     ark.Core.send(
         address=config.DELEGATE['REWARDWALLET'],
         amount=amount,
-        secret=config.DELEGATE['PASSPHRASE'])
+        secret=config.DELEGATE['PASSPHRASE'],
+        smartbridge=config.DELEGATE['REWARD_SMARTBRIDGE'])
 
 
 if __name__ == '__main__':
