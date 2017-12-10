@@ -108,6 +108,7 @@ def format_payments(payouts, timestamp):
 
 
 def transmit_payments(payouts):
+    failed_amount = 0
     for i in payouts:
         try:
             ark.Core.send(
@@ -118,7 +119,8 @@ def transmit_payments(payouts):
             )
         except ark.ApiError:
             logger.warning('APIerror, failed a transaction')
-
+            failed_amount += payouts[i]
+    return failed_amount
 
 def get_delegate_share():
     con = psycopg2.connect(dbname='payoutscript_administration',
@@ -209,9 +211,10 @@ if __name__ == '__main__':
             logger.info('DELEGATESHARE: {}'.format(delegate_share))
         else:
             logger.info('transmitting payouts')
-            transmit_payments(
-                payouts=formatted_payouts
-                )
+            failed_amount = transmit_payments(
+                                payouts=formatted_payouts
+                                )
+            delegate_share -= failed_amount
             logger.info('sending delegate share')
             handle_delegate_reward(delegate_share, current_timestamp=timestamp)
         if config.USE_LOCKS:
