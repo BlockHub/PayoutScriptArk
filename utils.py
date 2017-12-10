@@ -1,9 +1,9 @@
 import psycopg2
 import config
 
+
 class LockError(Exception):
     pass
-
 
 
 def set_lock(strict=True):

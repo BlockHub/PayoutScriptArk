@@ -98,8 +98,11 @@ def format_payments(payouts, timestamp):
     except TypeError:
         logger.exception('failed in setting payout for hard exceptions')
 
-    for address in config.DARKLIST:
-        res.pop(address, None)
+    try:
+        for address in config.DARKLIST:
+            res.pop(address, None)
+    except TypeError:
+        pass
 
     return res, delegate_share
 
@@ -184,7 +187,8 @@ if __name__ == '__main__':
     # Protect the entire run in a try block so we get postmortem info if
     # applicable.
     try:
-        utils.set_lock()
+        if config.USE_LOCKS:
+            utils.set_lock()
         logger.info('connecting to DB')
         connect()
         logger.info('setting parameters')
@@ -210,7 +214,8 @@ if __name__ == '__main__':
                 )
             logger.info('sending delegate share')
             handle_delegate_reward(delegate_share, current_timestamp=timestamp)
-        utils.release_lock()
+        if config.USE_LOCKS:
+            utils.release_lock()
     except Exception:
         logger.exception('caught exception in plugandplay')
         raise
