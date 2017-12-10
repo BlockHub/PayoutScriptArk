@@ -21,7 +21,7 @@ def create_db(user_name, password):
         return
 
 
-def create_table_locks():
+def create_table_locks(user_name, password):
     con = psycopg2.connect(dbname='payoutscript_administration',
                            user=user_name,
                            host='localhost',
@@ -34,7 +34,7 @@ def create_table_locks():
                        locked BOOLEAN);""")
 
 
-def create_table_delegate():
+def create_table_delegate(user_name, password):
     con = psycopg2.connect(dbname='payoutscript_administration',
                            user=user_name,
                            host='localhost',
@@ -48,7 +48,7 @@ def create_table_delegate():
                        reward BIGINT);""")
 
 
-def grant_privileges():
+def grant_privileges(user_name, password):
     con = psycopg2.connect(dbname='payoutscript_administration',
                            user=user_name,
                            host='localhost',
@@ -59,7 +59,7 @@ def grant_privileges():
     cur.execute("""GRANT ALL PRIVILEGES ON ALL TABLES IN SCHEMA public TO {};""".format(config.CONNECTION['USER']))
 
 
-def create_empty_lock():
+def create_empty_lock(user_name, password):
     con = psycopg2.connect(dbname='payoutscript_administration',
                            user=user_name,
                            host='localhost',
@@ -73,7 +73,7 @@ def create_empty_lock():
                    ON CONFLICT DO NOTHING;""")
 
 
-def create_delegate_entry():
+def create_delegate_entry(user_name, password):
     con = psycopg2.connect(dbname='payoutscript_administration',
                            user=user_name,
                            host='localhost',
@@ -105,15 +105,15 @@ if __name__ == '__main__':
     create_db(user_name, password)
     print('Success')
     print('creating tables')
-    create_table_locks()
-    create_table_delegate()
+    create_table_locks(user_name, password)
+    create_table_delegate(user_name, password)
     print('Success')
     print('granting privileges')
-    grant_privileges()
+    grant_privileges(user_name, password)
     print('success')
     print('creating lock')
-    create_empty_lock()
+    create_empty_lock(user_name, password)
     print('success')
     print('creating delegate entry')
-    create_delegate_entry()
+    create_delegate_entry(user_name, password)
     print('success')
