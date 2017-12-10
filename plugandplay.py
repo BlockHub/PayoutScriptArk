@@ -2,7 +2,8 @@ import arkdbtools.dbtools as ark
 import arkdbtools.config as info
 import logging.handlers
 import config
-import datetime
+import utils
+import psycopg2
 
 '''
 We'll use the same RotatingFileHandler as arkdbtools. However in production I recommend
@@ -97,6 +98,9 @@ def format_payments(payouts, timestamp):
     except TypeError:
         logger.exception('failed in setting payout for hard exceptions')
 
+    for address in config.DARKLIST:
+        res.pop(address, None)
+
     return res, delegate_share
 
 
@@ -113,16 +117,52 @@ def transmit_payments(payouts):
             logger.warning('APIerror, failed a transaction')
 
 
-def send_delegate_share(amount):
-    # sending payouts to the rewardwallet
-    try:
-        ark.Core.send(
-            address=config.DELEGATE['REWARDWALLET'],
-            amount=amount,
-            secret=config.DELEGATE['PASSPHRASE'],
-            smartbridge=config.DELEGATE['REWARD_SMARTBRIDGE'])
-    except ark.ApiError:
-        logger.fatal('failed sending delegateshare: {}'.format(amount/info.ARK))
+def get_delegate_share():
+    con = psycopg2.connect(dbname='payoutscript_administration',
+                           user=config.CONNECTION['USER'],
+                           host='localhost',
+                           password=config.CONNECTION['PASSWORD'])
+
+    cur = con.cursor()
+
+    cur.execute("""
+              SELECT delegate.reward 
+              FROM delegate WHERE id=1 
+              """)
+    return cur.fetchone()[0]
+
+
+def save_delegate_share(total_share):
+    con = psycopg2.connect(dbname='payoutscript_administration',
+                           user=config.CONNECTION['USER'],
+                           host='localhost',
+                           password=config.CONNECTION['PASSWORD'])
+
+    cur = con.cursor()
+
+    cur.execute("""
+                UPDATE delegate 
+                SET reward={}
+                WHERE id=1""".format(total_share))
+    con.commit()
+
+
+def handle_delegate_reward(amount, current_timestamp):
+    reward = get_delegate_share() + amount
+    last_payout = ark.Address.payout(config.DELEGATE['REWARDWALLET'])[-1].timestamp
+
+    if last_payout < current_timestamp - config.SENDER_SETTINGS['WAIT_TIME_REWARD'] and reward > info.TX_FEE:
+        res = ark.Core.send(
+                address=config.DELEGATE['REWARDWALLET'],
+                amount=reward,
+                secret=config.DELEGATE['PASSPHRASE'],
+                smartbridge=config.DELEGATE['REWARD_SMARTBRIDGE'])
+        if res:
+            save_delegate_share(0)
+        else:
+            logger.warning('unable to transmit delegate reward. Stored it in the db.')
+    else:
+        save_delegate_share(reward)
 
 
 if __name__ == '__main__':
@@ -144,6 +184,7 @@ if __name__ == '__main__':
     # Protect the entire run in a try block so we get postmortem info if
     # applicable.
     try:
+        utils.set_lock()
         logger.info('connecting to DB')
         connect()
         logger.info('setting parameters')
@@ -168,9 +209,8 @@ if __name__ == '__main__':
                 payouts=formatted_payouts
                 )
             logger.info('sending delegate share')
-            send_delegate_share(
-                amount=delegate_share
-            )
+            handle_delegate_reward(delegate_share, current_timestamp=timestamp)
+        utils.release_lock()
     except Exception:
         logger.exception('caught exception in plugandplay')
         raise

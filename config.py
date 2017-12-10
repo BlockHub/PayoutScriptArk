@@ -6,16 +6,16 @@ import arkdbtools.config as info
 
 # How to connect to the ark-node
 CONNECTION = {
-    'HOST': None,
-    'DATABASE': None,
-    'USER': None,
-    'PASSWORD': None,
+    'HOST': 'localhost',
+    'DATABASE': 'ark_mainnet',
+    'USER': 'postgres',
+    'PASSWORD':  'Dwl1ml12_3#',
 }
 
 # Who are we: the delegate's info.
 DELEGATE = {
     'PUBKEY'      : None,
-    'ADDRESS'     : None,
+    'ADDRESS'     : 'example',
     'PASSPHRASE'  : None,
     'REWARDWALLET': None,
     'REWARD_SMARTBRIDGE': '',
@@ -49,12 +49,16 @@ SENDER_SETTINGS = {
     'PERSONAL_MESSAGE': None,
     # min amount of seconds between a payout
     'WAIT_TIME': 0,
+    'WAIT_TIME_REWARD': 0,
 
 }
 
 # Blacklisted voters: whom do we never wish to pay out. Their Ark is divided over all other voters + delegate
 # format is a list
 BLACKLIST = None
+
+# Like blacklist, except delegate gets to keep the ark (not automatically added to delegate share)
+DARKLIST = None
 
 # preset amounts to be sent. format is a dict with address: amount. amount is in arksatoshis (10^8 as = 1 ark)
 HARD_EXCEPTIONS = None
