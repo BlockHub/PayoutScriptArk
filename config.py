@@ -6,16 +6,16 @@ import arkdbtools.config as info
 
 # How to connect to the ark-node
 CONNECTION = {
-    'HOST': 'localhost',
-    'DATABASE': 'ark_mainnet',
-    'USER': 'postgres',
-    'PASSWORD':  'Dwl1ml12_3#',
+    'HOST': None,
+    'DATABASE': None,
+    'USER': None,
+    'PASSWORD':  None,
 }
 
 # Who are we: the delegate's info.
 DELEGATE = {
     'PUBKEY'      : None,
-    'ADDRESS'     : 'example',
+    'ADDRESS'     : None,
     'PASSPHRASE'  : None,
     'REWARDWALLET': None,
     'REWARD_SMARTBRIDGE': '',
