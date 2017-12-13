@@ -37,7 +37,7 @@ def check_node_height():
     # check if node is at reasonable height. 51 means you are at maximum
     # 2 forged blocks behind.
     if config.PAYOUTCALCULATOR_TEST:
-        logger.info('--TESTMODE ON-- Node status: {}. Continuing main'.format(ark.Node.check_node(51)))
+        logger.info('--TESTMODE ON-- Node status: NOT CHECKED. Continuing main')
     else:
         if not ark.Node.check_node(51):
             logger.fatal('NodeDbError, node was more than 51 blocks behind')
