@@ -61,9 +61,9 @@ def format_payments(payouts, timestamp):
 
     # delegates substract fees from the amount you are sending. So if you transmit 1 Ark, the receiver will get 0.9 Ark
     if config.SENDER_SETTINGS['COVER_TX_FEES']:
-        fees = info.TX_FEE
-    else:
         fees = 0
+    else:
+        fees = - info.TX_FEE
 
     for payout in payouts:
 
@@ -121,6 +121,7 @@ def transmit_payments(payouts):
             logger.warning('APIerror, failed a transaction')
             failed_amount += payouts[i]
     return failed_amount
+
 
 def get_delegate_share():
     con = psycopg2.connect(dbname='payoutscript_administration',
