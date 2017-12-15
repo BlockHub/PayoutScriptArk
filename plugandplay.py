@@ -108,19 +108,21 @@ def format_payments(payouts, timestamp):
 
 
 def transmit_payments(payouts):
+    delegate_share = 0
     failed_amount = 0
-    for i in payouts:
+    for ark_address in payouts:
         try:
             ark.Core.send(
-                address=i,
-                amount=payouts[i],
+                address=ark_address,
+                amount=payouts[ark_address],
                 secret=config.DELEGATE['PASSPHRASE'],
                 smartbridge=config.SENDER_SETTINGS['PERSONAL_MESSAGE'],
             )
+            delegate_share += payouts[ark_address]
         except ark.ApiError:
             logger.warning('APIerror, failed a transaction')
-            failed_amount += payouts[i]
-    return failed_amount
+            failed_amount += payouts[ark_address]
+    return delegate_share, failed_amount
 
 
 def get_delegate_share():
@@ -167,6 +169,7 @@ def handle_delegate_reward(amount, current_timestamp):
             save_delegate_share(0)
         else:
             logger.warning('unable to transmit delegate reward. Stored it in the db.')
+            save_delegate_share(reward)
     else:
         save_delegate_share(reward)
 
@@ -201,7 +204,7 @@ if __name__ == '__main__':
         logger.info('calculating payouts')
         rawpayouts, timestamp = calculate()
         logger.info('formatting payouts')
-        formatted_payouts, delegate_share = format_payments(
+        formatted_payouts, true_delegate_share = format_payments(
             payouts=rawpayouts,
             timestamp=timestamp
         )
@@ -209,14 +212,13 @@ if __name__ == '__main__':
             logger.info('FORMATTED PAYMENTS')
             for i in formatted_payouts:
                 logger.info('{} ---- {}'.format(i, formatted_payouts[i]/info.ARK))
-            logger.info('DELEGATESHARE: {}'.format(delegate_share))
+            logger.info('DELEGATESHARE: {}'.format(true_delegate_share))
         else:
             logger.info('transmitting payouts')
-            failed_amount = transmit_payments(
+            delegate_share, failed_amount = transmit_payments(
                                 payouts=formatted_payouts
                                 )
-            delegate_share -= failed_amount
-            logger.info('sending delegate share')
+            logger.info('sending delegate share: {}'.format(delegate_share))
             handle_delegate_reward(delegate_share, current_timestamp=timestamp)
         if config.USE_LOCKS:
             utils.release_lock()
