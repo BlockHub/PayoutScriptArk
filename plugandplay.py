@@ -105,28 +105,28 @@ def transmit_payments(payouts):
     failed_amount = 0
     api.use(network='ark')
     for ark_address in payouts:
-        try:
-            tx = core.Transaction(
-                amount=payouts[ark_address],
-                recipientId=ark_address,
-                vendorField=config.SENDER_SETTINGS['PERSONAL_MESSAGE'])
 
-            if config.DELEGATE['SECOND_SECRET']:
-                tx.sign(secret=config.DELEGATE['SECRET'],
-                        secondSecret=config.DELEGATE['SECOND_SECRET'])
-            else:
-                tx.sign(secret=config.DELEGATE['SECRET'])
+        tx = core.Transaction(
+            amount=payouts[ark_address],
+            recipientId=ark_address,
+            vendorField=config.SENDER_SETTINGS['PERSONAL_MESSAGE'])
 
-            tx.serialize()
-            api.sendTx(
-               tx=tx,
-               url_base=config.IP,
-               secret=config.DELEGATE['SECRET'],
-               secondSecret=config.DELEGATE['SECOND_SECRET']
-                       )
-        except ark.ApiError:
-            logger.warning('APIerror, failed a transaction')
-            failed_amount += payouts[ark_address]
+        if config.DELEGATE['SECOND_SECRET']:
+            tx.sign(secret=config.DELEGATE['SECRET'],
+                    secondSecret=config.DELEGATE['SECOND_SECRET'])
+        else:
+            tx.sign(secret=config.DELEGATE['SECRET'])
+
+        tx.serialize()
+        res = api.sendTx(
+           tx=tx,
+           url_base=config.IP,
+           secret=config.DELEGATE['SECRET'],
+           secondSecret=config.DELEGATE['SECOND_SECRET']
+                   )
+        if not res['success']:
+            logger.warning('{}'.format(res))
+
 
 
 if __name__ == '__main__':
@@ -160,7 +160,7 @@ if __name__ == '__main__':
         logger.info('calculating payouts')
         rawpayouts, timestamp = calculate()
         logger.info('formatting payouts')
-        formatted_payouts, true_delegate_share = format_payments(
+        formatted_payouts = format_payments(
             payouts=rawpayouts,
             timestamp=timestamp
         )
@@ -168,7 +168,6 @@ if __name__ == '__main__':
             logger.info('FORMATTED PAYMENTS')
             for i in formatted_payouts:
                 logger.info('{} ---- {}'.format(i, formatted_payouts[i]/info.ARK))
-            logger.info('DELEGATESHARE: {}'.format(true_delegate_share))
         else:
             logger.info('transmitting payouts')
             transmit_payments(payouts=formatted_payouts)

@@ -79,4 +79,5 @@ LOGGING = {
 # only log statements are generated.
 PAYOUTCALCULATOR_TEST = True
 PAYOUTSENDER_TEST = True
+REWARD_DELEGATE_TEST = True
 USE_LOCKS = True
