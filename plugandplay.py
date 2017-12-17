@@ -3,7 +3,8 @@ import arkdbtools.config as info
 import logging.handlers
 import config
 import utils
-import psycopg2
+from arky import api, core
+
 
 '''
 We'll use the same RotatingFileHandler as arkdbtools. However in production I recommend
@@ -56,7 +57,6 @@ def calculate():
 
 
 def format_payments(payouts, timestamp):
-    delegate_share = 0
     res = {}
 
     # delegates substract fees from the amount you are sending. So if you transmit 1 Ark, the receiver will get 0.9 Ark
@@ -75,15 +75,10 @@ def format_payments(payouts, timestamp):
             if config.SENDER_SETTINGS['REQUIRE_CURRENT_VOTER']:
                 if payouts[payout]['status']:
                     res.update({payout: amount})
-                    delegate_share += payouts[payout]['share'] - amount
-
                     continue
 
             else:
                 res.update({payout: amount})
-                delegate_share += payouts[payout]['share'] - amount
-                logger.debug(res)
-
 
     try:
         for x in config.HARD_EXCEPTIONS:
@@ -91,7 +86,6 @@ def format_payments(payouts, timestamp):
             and payouts[x]['last_payout'] < timestamp - config.SENDER_SETTINGS['WAIT_TIME']:
 
                 amount = config.HARD_EXCEPTIONS[x] + fees
-                delegate_share += (payouts[x]['share'] - amount)
                 res.update({
                     config.HARD_EXCEPTIONS[x]: amount,
                 })
@@ -104,74 +98,28 @@ def format_payments(payouts, timestamp):
     except TypeError:
         pass
 
-    return res, delegate_share
+    return res
 
 
 def transmit_payments(payouts):
-    delegate_share = 0
     failed_amount = 0
+    api.use(network='ark')
     for ark_address in payouts:
         try:
-            ark.Core.send(
-                address=ark_address,
+            tx = core.Transaction(
                 amount=payouts[ark_address],
-                secret=config.DELEGATE['PASSPHRASE'],
-                smartbridge=config.SENDER_SETTINGS['PERSONAL_MESSAGE'],
-            )
-            delegate_share += payouts[ark_address]
+                recipientId=ark_address,
+                vendorField=config.SENDER_SETTINGS['PERSONAL_MESSAGE'])
+
+            api.sendTx(
+               tx=tx,
+               url_base=config.IP,
+               secret=config.DELEGATE['SECRET'],
+               secondSecret=config.DELEGATE['SECOND_SECRET']
+                       )
         except ark.ApiError:
             logger.warning('APIerror, failed a transaction')
             failed_amount += payouts[ark_address]
-    return delegate_share, failed_amount
-
-
-def get_delegate_share():
-    con = psycopg2.connect(dbname='payoutscript_administration',
-                           user=config.CONNECTION['USER'],
-                           host='localhost',
-                           password=config.CONNECTION['PASSWORD'])
-
-    cur = con.cursor()
-
-    cur.execute("""
-              SELECT delegate.reward 
-              FROM delegate WHERE id=1 
-              """)
-    return cur.fetchone()[0]
-
-
-def save_delegate_share(total_share):
-    con = psycopg2.connect(dbname='payoutscript_administration',
-                           user=config.CONNECTION['USER'],
-                           host='localhost',
-                           password=config.CONNECTION['PASSWORD'])
-
-    cur = con.cursor()
-
-    cur.execute("""
-                UPDATE delegate 
-                SET reward={}
-                WHERE id=1""".format(total_share))
-    con.commit()
-
-
-def handle_delegate_reward(amount, current_timestamp):
-    reward = get_delegate_share() + amount
-    last_payout = ark.Address.payout(config.DELEGATE['REWARDWALLET'])[-1].timestamp
-
-    if last_payout < current_timestamp - config.SENDER_SETTINGS['WAIT_TIME_REWARD'] and reward > info.TX_FEE:
-        res = ark.Core.send(
-                address=config.DELEGATE['REWARDWALLET'],
-                amount=reward,
-                secret=config.DELEGATE['PASSPHRASE'],
-                smartbridge=config.DELEGATE['REWARD_SMARTBRIDGE'])
-        if res:
-            save_delegate_share(0)
-        else:
-            logger.warning('unable to transmit delegate reward. Stored it in the db.')
-            save_delegate_share(reward)
-    else:
-        save_delegate_share(reward)
 
 
 if __name__ == '__main__':
@@ -195,6 +143,7 @@ if __name__ == '__main__':
     try:
         if config.USE_LOCKS:
             utils.set_lock()
+
         logger.info('connecting to DB')
         connect()
         logger.info('setting parameters')
@@ -215,13 +164,11 @@ if __name__ == '__main__':
             logger.info('DELEGATESHARE: {}'.format(true_delegate_share))
         else:
             logger.info('transmitting payouts')
-            delegate_share, failed_amount = transmit_payments(
-                                payouts=formatted_payouts
-                                )
-            logger.info('sending delegate share: {}'.format(delegate_share))
-            handle_delegate_reward(delegate_share, current_timestamp=timestamp)
+            transmit_payments(payouts=formatted_payouts)
+
         if config.USE_LOCKS:
             utils.release_lock()
+
     except Exception:
         logger.exception('caught exception in plugandplay')
         raise

@@ -52,3 +52,5 @@ def release_lock(strict=True):
               WHERE id=1 
               """)
     con.commit()
+
+

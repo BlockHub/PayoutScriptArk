@@ -16,7 +16,8 @@ CONNECTION = {
 DELEGATE = {
     'PUBKEY'      : None,
     'ADDRESS'     : None,
-    'PASSPHRASE'  : None,
+    'SECRET'  : None,
+    'SECOND_SECRET': None,
     'REWARDWALLET': None,
     'REWARD_SMARTBRIDGE': '',
     }
@@ -32,7 +33,7 @@ SENDER_SETTINGS = {
     # at calculation, wallet has to be a current voter
     'REQUIRE_CURRENT_VOTER': True,
     # The default share ratio
-    'DEFAULT_SHARE': 1,
+    'DEFAULT_SHARE': 0.96,
     # startblock calculation
 
     # any balance above max balance or below min balance is not taken in the
@@ -41,7 +42,7 @@ SENDER_SETTINGS = {
     # 300k, it is counted as 200K.
     # If a voter has 1 Ark, and MIN_BALANCE == 2 Ark, it is counted as 0 Ark
     'MIN_PAYOUT_BALANCE'           : 0,
-    'COVER_TX_FEES'                : False,
+    'COVER_TX_FEES'                : True,
 
     # At the end of the personal message a tag could be included for
     # administrative purposes
@@ -52,6 +53,9 @@ SENDER_SETTINGS = {
     'WAIT_TIME_REWARD': 0,
 
 }
+
+#IP address of node to send the transactions to, example format: 'http://146.185.144.47:4001'
+IP = 'http://146.185.144.47:4001'
 
 # Blacklisted voters: whom do we never wish to pay out. Their Ark is divided over all other voters + delegate
 # format is a list
