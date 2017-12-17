@@ -111,6 +111,13 @@ def transmit_payments(payouts):
                 recipientId=ark_address,
                 vendorField=config.SENDER_SETTINGS['PERSONAL_MESSAGE'])
 
+            if config.DELEGATE['SECOND_SECRET']:
+                tx.sign(secret=config.DELEGATE['SECRET'],
+                        secondSecret=config.DELEGATE['SECOND_SECRET'])
+            else:
+                tx.sign(secret=config.DELEGATE['SECRET'])
+
+            tx.serialize()
             api.sendTx(
                tx=tx,
                url_base=config.IP,
