@@ -102,7 +102,6 @@ def format_payments(payouts, timestamp):
 
 
 def transmit_payments(payouts):
-    failed_amount = 0
     api.use(network='ark')
     for ark_address in payouts:
 
@@ -127,18 +126,18 @@ def transmit_payments(payouts):
         if not res['success']:
             logger.warning('{}'.format(res))
 
-
+logger = logging.getLogger(__name__)
+handler = logging.handlers.RotatingFileHandler(config.LOGGING['LOGDIR'],
+                                               encoding='utf-8',
+                                               maxBytes=10 * 1024 * 1024,
+                                               backupCount=5)
+formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
+handler.setFormatter(formatter)
+logger.addHandler(handler)
 
 if __name__ == '__main__':
     # Initialize logging
-    logger = logging.getLogger(__name__)
-    handler = logging.handlers.RotatingFileHandler(config.LOGGING['LOGDIR'],
-                                                   encoding='utf-8',
-                                                   maxBytes=10 * 1024 * 1024,
-                                                   backupCount=5)
-    formatter = logging.Formatter('%(asctime)s %(name)-12s %(levelname)-8s %(message)s')
-    handler.setFormatter(formatter)
-    logger.addHandler(handler)
+
 
     if config.PAYOUTCALCULATOR_TEST:
         logger.setLevel(logging.DEBUG)
