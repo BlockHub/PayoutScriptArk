@@ -4,6 +4,11 @@ import arkdbtools.config as info
 # all values used throughout the script are in ark-satoshis, except for the logging of the payouts,
 # to make it more readably. You can use X * info.ARK to denote a X ARK
 
+# DATABASE for user data settings:
+username = None
+password = None
+
+
 # How to connect to the ark-node
 CONNECTION = {
     'HOST': None,
