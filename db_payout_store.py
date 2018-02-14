@@ -17,9 +17,11 @@ def store(payouts, user_name, password, raw_payouts):
 
     cur = con.cursor()
 
-    for i in payouts:
+    for i in raw_payouts:
         timestamp = arkt_to_unixt(raw_payouts[i]['last_payout'])
-
+        share = payouts[i]['share'] + config.SENDER_SETTINGS['DEFAULT_SHARE']
+        if config.SENDER_SETTINGS['COVER_TX_FEES']:
+            share -= 0.1*ARK
         cur.execute(
             """
             INSERT
@@ -35,7 +37,7 @@ def store(payouts, user_name, password, raw_payouts):
             WHERE users_payouts.address = '{address}' ;   
             """.format(
                 address=i,
-                payout=payouts[i],
+                payout=share,
                 timestamp=timestamp,
                 )
         )
