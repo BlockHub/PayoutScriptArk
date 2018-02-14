@@ -86,6 +86,20 @@ def create_delegate_entry(user_name, password):
                    ON CONFLICT DO NOTHING;;""".format(config.DELEGATE['ADDRESS']))
 
 
+def create_table_users_payouts(user_name, password):
+    con = psycopg2.connect(dbname='payoutscript_administration',
+                           user=user_name,
+                           host='localhost',
+                           password=password)
+    con.autocommit = True
+
+    cur = con.cursor()
+    cur.execute("""CREATE TABLE IF NOT EXISTS users_payouts (
+                       address VARCHAR(50) PRIMARY KEY,
+                       payout BIGINT,
+                       last_payout BIGINT);""")
+
+
 if __name__ == '__main__':
     # Initialize logging
     logger = logging.getLogger(__name__)
@@ -107,6 +121,7 @@ if __name__ == '__main__':
     print('creating tables')
     create_table_locks(user_name, password)
     create_table_delegate(user_name, password)
+    create_table_users_payouts(user_name, password)
     print('Success')
     print('granting privileges')
     grant_privileges(user_name, password)

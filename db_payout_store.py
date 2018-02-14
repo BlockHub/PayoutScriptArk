@@ -1,10 +1,14 @@
 import psycopg2
 from plugandplay import connect, set_params, calculate, format_payments
 from arkdbtools.utils import arkt_to_unixt
+from arkdbtools.config import ARK
 import config
+import logging
+
+logger = logging.getLogger(__name__)
 
 
-def store(payouts, user_name, password):
+def store(payouts, user_name, password, raw_payouts):
     con = psycopg2.connect(dbname='payoutscript_administration',
                            user=user_name,
                            host='localhost',
@@ -14,36 +18,40 @@ def store(payouts, user_name, password):
     cur = con.cursor()
 
     for i in payouts:
-        timestamp = arkt_to_unixt(payouts[i]['last_payout'])
-
+        timestamp = arkt_to_unixt(raw_payouts[i]['last_payout'])
 
         cur.execute(
             """
             INSERT
             INTO
             users_payouts(address, payout, last_payout)
-            VALUES('{address}', {payout}, {timestamp})
+            VALUES('{address}', {payout}, ({timestamp}))
             ON CONFLICT(address)
             DO UPDATE
             SET
-                payout = {payout};
+                payout = {payout},
                 last_payout = {timestamp}
             
-            WHERE address = '{address}'    
+            WHERE users_payouts.address = '{address}' ;   
             """.format(
                 address=i,
-                payout=i['share'],
+                payout=payouts[i],
                 timestamp=timestamp,
                 )
         )
 
 
 if __name__ == "__main__":
+    print('connecting')
     connect()
+    print('setting params')
     set_params()
+    print('calculating')
     payouts, timestamp = calculate()
+    print('formatting')
     formatted_payments = format_payments(payouts, timestamp)
-    store(formatted_payments, config.username, config.password)
+    print('saving')
+    store(formatted_payments, config.username, config.password, payouts)
 
 
 
