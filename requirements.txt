@@ -7,7 +7,7 @@ billiard==3.5.0.3
 chardet==3.0.4
 colorama==0.3.9
 docopt==0.6.2
-ecdsa==0.13
+ecdsa==0.13.3
 ez-setup==0.9
 idna==2.6
 joblib==0.11
