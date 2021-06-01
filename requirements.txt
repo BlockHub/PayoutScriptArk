@@ -25,7 +25,7 @@ requests-toolbelt==0.8.0
 six==1.11.0
 tabulate==0.8.1
 tqdm==4.19.4
-urllib3==1.22
+urllib3==1.26.5
 vine==1.1.4
 wincertstore==0.2
 yawTtk==1.0.5
